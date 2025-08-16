@@ -269,7 +269,31 @@ export const factsAbi = [
   },
   {
     type: "function",
-    name: "calculateVouchedClaimable",
+    name: "calcSlashAmount",
+    inputs: [
+      {
+        name: "amount",
+        type: "uint256",
+        internalType: "uint256",
+      },
+      {
+        name: "slashBP",
+        type: "uint64",
+        internalType: "uint64",
+      },
+    ],
+    outputs: [
+      {
+        name: "",
+        type: "uint256",
+        internalType: "uint256",
+      },
+    ],
+    stateMutability: "pure",
+  },
+  {
+    type: "function",
+    name: "calcVouchedClaimable",
     inputs: [
       {
         name: "questionId",

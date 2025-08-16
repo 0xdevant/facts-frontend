@@ -4,7 +4,7 @@ import { factsAbi } from "./abis/Facts";
 import { iERC20Abi } from "./abis/IERC20";
 
 export const factsContractAddress =
-  "0x25C8Cc18bA28310087729a355FF884e4058f08f9";
+  "0x86044524A10f0da99a62D0657fbA3E25B0Bcd99B";
 
 export const hyperevmTestnet = defineChain({
   id: 998,

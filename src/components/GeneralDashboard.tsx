@@ -426,7 +426,17 @@ export default function GeneralDashboard() {
                 // Check if this answer was slashed (challenge succeeded and this answer was overthrown)
                 if (slotData.challengeSucceeded && slotData.overthrownAnswerId === answerId) {
                   isSlashed = true;
-                  slashed = (vouched * challengeConfig.slashVoucherBP) / basisPoints;
+                  try {
+                    slashed = await readContract(publicClient, {
+                      address: factsContractAddress,
+                      abi: factsAbi,
+                      functionName: 'calcSlashAmount',
+                      args: [vouched, challengeConfig.slashVoucherBP],
+                    }) as bigint;
+                  } catch {
+                    console.error(`Error calculating slash amount for question ${i}, answer ${answerId}`);
+                    slashed = BigInt(0);
+                  }
                 } else if (!slotData.challengeSucceeded && !claimed) {
                   // Only calculate claimable if challenge failed and not claimed
                   try {
@@ -435,7 +445,7 @@ export default function GeneralDashboard() {
                     const voucherClaimable = await readContract(publicClient, {
                       address: factsContractAddress,
                       abi: factsAbi,
-                      functionName: 'calculateVouchedClaimable',
+                      functionName: 'calcVouchedClaimable',
                       args: [BigInt(i), address as `0x${string}`, answerId, bountyAmount],
                     });
                     claimable = voucherClaimable as bigint;
