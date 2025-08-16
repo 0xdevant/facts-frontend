@@ -3,7 +3,7 @@ import { PrismaClient } from "@prisma/client";
 // Global variable to store the Prisma client instance
 let prisma: PrismaClient;
 
-// Function to get or create the Prisma client
+// Function to get or create the Prisma client with Vercel-optimized settings
 export function getPrismaClient(): PrismaClient {
   if (!prisma) {
     prisma = new PrismaClient({
@@ -20,6 +20,18 @@ export function getPrismaClient(): PrismaClient {
 export async function closeDatabase(): Promise<void> {
   if (prisma) {
     await prisma.$disconnect();
+  }
+}
+
+// Test database connection
+export async function testDatabaseConnection(): Promise<boolean> {
+  try {
+    const client = getPrismaClient();
+    await client.$queryRaw`SELECT 1`;
+    return true;
+  } catch (error) {
+    console.error("Database connection test failed:", error);
+    return false;
   }
 }
 

@@ -7,6 +7,7 @@ import {
   updateSourceAnswerId,
   deleteSource,
   sourceExists,
+  testDatabaseConnection,
 } from "@/lib/database";
 
 interface SourceData {
@@ -20,6 +21,20 @@ interface SourceData {
 
 export async function POST(request: NextRequest) {
   try {
+    // Test database connection first
+    const isConnected = await testDatabaseConnection();
+    if (!isConnected) {
+      console.error("Database connection failed");
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Database connection failed",
+          details: "Unable to connect to the database",
+        },
+        { status: 503 }
+      );
+    }
+
     const body: SourceData = await request.json();
 
     // Validate required fields

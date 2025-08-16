@@ -5,11 +5,26 @@ import {
   updateQuestion,
   deleteQuestion,
   CreateQuestionData,
+  testDatabaseConnection,
 } from "@/lib/database";
 
 // POST - Create a new question with rules
 export async function POST(request: NextRequest) {
   try {
+    // Test database connection first
+    const isConnected = await testDatabaseConnection();
+    if (!isConnected) {
+      console.error("Database connection failed");
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Database connection failed",
+          details: "Unable to connect to the database",
+        },
+        { status: 503 }
+      );
+    }
+
     const body = await request.json();
     const { questionId, rules } = body;
 
@@ -50,6 +65,30 @@ export async function POST(request: NextRequest) {
     // Check for specific database errors
     const errorMessage =
       error instanceof Error ? error.message : "Unknown error";
+
+    // Check for common database errors
+    if (errorMessage.includes("P1001") || errorMessage.includes("P1002")) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Database connection error",
+          details:
+            "Unable to connect to the database. Please check your DATABASE_URL configuration.",
+        },
+        { status: 503 }
+      );
+    }
+
+    if (errorMessage.includes("P2002")) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Duplicate entry",
+          details: "A question with this ID already exists",
+        },
+        { status: 409 }
+      );
+    }
 
     return NextResponse.json(
       {

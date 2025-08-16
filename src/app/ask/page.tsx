@@ -384,16 +384,25 @@ export default function AskQuestionPage() {
         }),
       });
 
-      if (response.ok) {
+      const responseData = await response.json();
+
+      if (response.ok && responseData.success) {
         setSuccessMessage("Question submitted successfully! Your rules have been saved.");
       } else {
-        const errorData = await response.json();
-        console.error("API error:", errorData);
-        setSuccessMessage("Question submitted successfully! However, there was an issue saving your question to the database.");
+        console.error("API error:", responseData);
+        
+        // Provide more specific error messages
+        if (response.status === 503) {
+          setSuccessMessage("Question submitted successfully! However, there was a database connection issue. Your rules may not have been saved.");
+        } else if (response.status === 409) {
+          setSuccessMessage("Question submitted successfully! However, there was a conflict with existing data.");
+        } else {
+          setSuccessMessage("Question submitted successfully! However, there was an issue saving your question to the database.");
+        }
       }
     } catch (error) {
       console.error("Failed to save question to database:", error);
-      setSuccessMessage("Question submitted successfully! However, there was an issue saving your question to the database.");
+      setSuccessMessage("Question submitted successfully! However, there was a network error saving your question to the database.");
     }
     setShowSuccessModal(true);
   };
