@@ -5,7 +5,9 @@ import { RainbowKitProvider, ConnectButton, lightTheme, darkTheme } from '@rainb
 import { WagmiProvider } from 'wagmi';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useAccount } from 'wagmi';
+import { readContract } from 'viem/actions';
 import { config } from '@/lib/wagmi';
+import { factsContractAddress, factsAbi, publicClient } from '@/lib/contract';
 import '@rainbow-me/rainbowkit/styles.css';
 
 function ThemeToggle({ onThemeChange }: { onThemeChange: (isDark: boolean) => void }) {
@@ -51,7 +53,34 @@ const queryClient = new QueryClient();
 
 function Header({ isDarkMode, onThemeChange }: { isDarkMode: boolean; onThemeChange: (isDark: boolean) => void }) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const { isConnected } = useAccount();
+  const [isOwner, setIsOwner] = useState(false);
+  const { isConnected, address } = useAccount();
+
+  // Check if user is owner
+  useEffect(() => {
+    async function checkOwner() {
+      if (!isConnected || !address) {
+        setIsOwner(false);
+        return;
+      }
+
+      try {
+        const contractOwner = await readContract(publicClient, {
+          address: factsContractAddress,
+          abi: factsAbi,
+          functionName: 'owner',
+          args: [],
+        });
+
+        setIsOwner(contractOwner.toLowerCase() === address.toLowerCase());
+      } catch (error) {
+        console.error('Error checking owner:', error);
+        setIsOwner(false);
+      }
+    }
+
+    checkOwner();
+  }, [isConnected, address]);
 
   const toggleMobileMenu = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen);
@@ -80,6 +109,11 @@ function Header({ isDarkMode, onThemeChange }: { isDarkMode: boolean; onThemeCha
             {isConnected && (
               <Link href="/dashboard" className="theme-text-primary hover:text-cyan-500 transition-colors">
                 Dashboard
+              </Link>
+            )}
+            {isOwner && (
+              <Link href="/admin" className="theme-text-primary hover:text-red-500 transition-colors font-medium">
+                Admin
               </Link>
             )}
           </nav>
@@ -148,6 +182,15 @@ function Header({ isDarkMode, onThemeChange }: { isDarkMode: boolean; onThemeCha
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
                   Dashboard
+                </Link>
+              )}
+              {isOwner && (
+                <Link
+                  href="/admin"
+                  className="block px-3 py-2 rounded-md text-base font-medium theme-text-primary hover:text-red-500 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors border-t border-gray-200 dark:border-gray-700 mt-2 pt-2"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  Admin
                 </Link>
               )}
               <div className="border-t border-gray-200 dark:border-gray-700 pt-2 mt-2">
