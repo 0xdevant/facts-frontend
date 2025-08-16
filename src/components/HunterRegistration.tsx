@@ -111,7 +111,7 @@ export default function HunterRegistration({ onSuccess }: HunterRegistrationProp
               setShowForm(false);
               onSuccess?.();
             }}
-            className="button-primary"
+            className="button-primary mx-auto"
           >
             Continue
           </button>
@@ -146,7 +146,7 @@ export default function HunterRegistration({ onSuccess }: HunterRegistrationProp
           </p>
           <button
             onClick={() => setShowForm(true)}
-            className="button-primary"
+            className="button-primary mx-auto"
           >
             Register as Hunter
           </button>
