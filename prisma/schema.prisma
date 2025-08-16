@@ -1,0 +1,35 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Source {
+  id            Int      @id @default(autoincrement())
+  questionId    Int      @map("question_id")
+  answerId      Int      @map("answer_id")
+  answer        String
+  sources       String
+  hunterAddress String   @map("hunter_address")
+  timestamp     BigInt
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  @@index([questionId, answerId])
+  @@index([hunterAddress])
+  @@map("sources")
+}
+
+model Question {
+  id         Int      @id @default(autoincrement())
+  questionId Int      @unique @map("question_id")
+  rules      String?
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  @@index([questionId])
+  @@map("questions")
+}
