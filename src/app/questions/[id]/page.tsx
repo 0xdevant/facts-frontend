@@ -251,6 +251,34 @@ const formatBountyAmountExact = (amount: bigint): string => {
   return `${inEther} HYPE`;
 };
 
+// Function to convert text with URLs to JSX with clickable links
+const renderTextWithLinks = (text: string): React.ReactNode => {
+  if (!text || text === "No sources provided") {
+    return text;
+  }
+
+  // URL regex pattern - matches http/https URLs
+  const urlRegex = /(https?:\/\/[^\s]+)/g;
+  const parts = text.split(urlRegex);
+
+  return parts.map((part, index) => {
+    if (urlRegex.test(part)) {
+      return (
+        <a
+          key={index}
+          href={part}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 underline break-all"
+        >
+          {part}
+        </a>
+      );
+    }
+    return part;
+  });
+};
+
 const formatVouchedAmount = (amount: bigint): string => {
   if (amount === BigInt(0)) return '0 HYPE';
   const inEther = Number(amount) / Math.pow(10, 18);
@@ -875,7 +903,7 @@ const AnswerCard = ({ answer, index, questionType, questionId, question }: { ans
         
         <div>
           <h4 className="font-medium mb-1 theme-text-primary">Sources</h4>
-          <p className="theme-text-secondary">{sources}</p>
+          <div className="theme-text-secondary">{renderTextWithLinks(sources)}</div>
         </div>
       </div>
     </div>
