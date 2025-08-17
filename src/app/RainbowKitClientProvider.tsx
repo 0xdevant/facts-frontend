@@ -224,7 +224,8 @@ function Header({ isDarkMode, onThemeChange }: { isDarkMode: boolean; onThemeCha
 
       <HowItWorksModal 
         isOpen={showHowItWorksModal} 
-        onClose={() => setShowHowItWorksModal(false)} 
+        onClose={() => setShowHowItWorksModal(false)}
+        key={isDarkMode ? 'dark' : 'light'} // Force re-render on theme change
       />
     </>
   );

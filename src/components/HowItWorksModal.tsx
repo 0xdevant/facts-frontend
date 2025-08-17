@@ -1,16 +1,50 @@
+import { useState, useEffect } from 'react';
+
 interface HowItWorksModalProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
 export default function HowItWorksModal({ isOpen, onClose }: HowItWorksModalProps) {
+  const [forceUpdate, setForceUpdate] = useState(0);
+
+  // Force re-render when theme changes
+  useEffect(() => {
+    const observer = new MutationObserver((mutations) => {
+      mutations.forEach((mutation) => {
+        if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
+          setForceUpdate((prev: number) => prev + 1);
+        }
+      });
+    });
+
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['class']
+    });
+
+    return () => observer.disconnect();
+  }, []);
+
   if (!isOpen) return null;
 
+  // Use forceUpdate to ensure re-render on theme change
+  const renderKey = forceUpdate;
+
+  const handleBackdropClick = (e: React.MouseEvent) => {
+    if (e.target === e.currentTarget) {
+      onClose();
+    }
+  };
+
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+    <div 
+      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+      onClick={handleBackdropClick}
+    >
       <div className="bg-white dark:bg-gray-800 rounded-2xl p-8 max-w-4xl w-full shadow-2xl transform transition-all max-h-[90vh] overflow-y-auto">
         <div className="flex justify-between items-start mb-4">
-          <h2 className="text-2xl font-bold theme-text-primary">How facts.hype Works</h2>
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">How facts.hype Works</h2>
           <button
             onClick={onClose}
             className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
@@ -24,14 +58,14 @@ export default function HowItWorksModal({ isOpen, onClose }: HowItWorksModalProp
         <div className="space-y-6">
           {/* Introduction */}
           <div className="bg-gradient-to-r from-cyan-50 to-blue-50 dark:from-cyan-900/20 dark:to-blue-900/20 p-4 rounded-xl">
-            <p className="text-lg theme-text-primary leading-relaxed">
+            <p className="text-lg text-gray-900 dark:text-white leading-relaxed">
               facts.hype provides a way for users to ask any questions and get the most reliable and credible answer verified by the crowd, with a dispute resolution mechanism built-in.
             </p>
           </div>
 
           {/* Phases Overview */}
           <div className="bg-gray-50 dark:bg-gray-700/50 p-4 rounded-xl">
-            <h3 className="text-lg font-semibold mb-4 theme-text-primary">Phases:</h3>
+            <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">Phases:</h3>
             <div className="flex flex-wrap items-center gap-2 text-sm">
               <span className="px-3 py-1 bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300 rounded-full">Ask</span>
               <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -64,8 +98,8 @@ export default function HowItWorksModal({ isOpen, onClose }: HowItWorksModalProp
                 <span className="text-sm font-semibold text-blue-800">1</span>
               </div>
               <div>
-                <p className="theme-text-primary">
-                  Users can ask any question and choose to attach a bounty <span className="font-semibold text-blue-600">(Truth-seeker asks)</span>
+                <p className="text-gray-900 dark:text-white">
+                  Users can ask any question and choose to attach a bounty <span className="font-semibold text-blue-600 dark:text-blue-400">(Truth-seeker asks)</span>
                 </p>
               </div>
             </div>
@@ -75,8 +109,8 @@ export default function HowItWorksModal({ isOpen, onClose }: HowItWorksModalProp
                 <span className="text-sm font-semibold text-green-800">2</span>
               </div>
               <div>
-                <p className="theme-text-primary">
-                  Others can submit different answers after depositing $HYPE to be a hunter <span className="font-semibold text-green-600">(Hunter hunts)</span>
+                <p className="text-gray-900 dark:text-white">
+                  Others can submit different answers after depositing $HYPE to be a hunter <span className="font-semibold text-green-600 dark:text-green-400">(Hunter hunts)</span>
                 </p>
               </div>
             </div>
@@ -86,8 +120,8 @@ export default function HowItWorksModal({ isOpen, onClose }: HowItWorksModalProp
                 <span className="text-sm font-semibold text-green-800">3</span>
               </div>
               <div>
-                <p className="theme-text-primary">
-                  Others can vouch for the answer they believe to be true by staking $HYPE on top <span className="font-semibold text-emerald-600">(Voucher vouches)</span>
+                <p className="text-gray-900 dark:text-white">
+                  Others can vouch for the answer they believe to be true by staking $HYPE on top <span className="font-semibold text-emerald-600 dark:text-emerald-400">(Voucher vouches)</span>
                 </p>
               </div>
             </div>
@@ -97,17 +131,17 @@ export default function HowItWorksModal({ isOpen, onClose }: HowItWorksModalProp
                 <span className="text-sm font-semibold text-green-800">4</span>
               </div>
               <div>
-                <p className="theme-text-primary">
+                <p className="text-gray-900 dark:text-white">
                   The answer with the most vouched gets selected to be the &ldquo;most-truthful&rdquo; answer
                 </p>
                 <div className="mt-2 space-y-2">
                   <div className="p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
-                    <p className="text-sm theme-text-secondary">
+                    <p className="text-sm text-gray-600 dark:text-gray-300">
                       <span className="font-semibold">Note 1:</span> Hunter and vouchers of the selected answer will share the bounty
                     </p>
                   </div>
                   <div className="p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
-                    <p className="text-sm theme-text-secondary">
+                    <p className="text-sm text-gray-600 dark:text-gray-300">
                       <span className="font-semibold">Note 2:</span> If there is only one answer or no answer gets more vouched than the others, the result can be settled immediately and no bounty will be distributed
                     </p>
                   </div>
@@ -120,8 +154,8 @@ export default function HowItWorksModal({ isOpen, onClose }: HowItWorksModalProp
                 <span className="text-sm font-semibold text-yellow-800">5</span>
               </div>
               <div>
-                <p className="theme-text-primary">
-                  Anyone can submit a challenge after the hunting period by paying $HYPE <span className="font-semibold text-yellow-600">(Challenger challenges)</span>
+                <p className="text-gray-900 dark:text-white">
+                  Anyone can submit a challenge after the hunting period by paying $HYPE <span className="font-semibold text-yellow-600 dark:text-yellow-400">(Challenger challenges)</span>
                 </p>
               </div>
             </div>
@@ -131,8 +165,8 @@ export default function HowItWorksModal({ isOpen, onClose }: HowItWorksModalProp
                 <span className="text-sm font-semibold text-purple-800">6</span>
               </div>
               <div>
-                <p className="theme-text-primary">
-                  If it gets accepted by the DAO - part of the hunter&apos;s stake will be slashed to challenger, part of vouchers&apos; stake will be slashed to the DAO <span className="font-semibold text-orange-600">(DAO settles)</span>
+                <p className="text-gray-900 dark:text-white">
+                  If it gets accepted by the DAO - part of the hunter&apos;s stake will be slashed to challenger, part of vouchers&apos; stake will be slashed to the DAO <span className="font-semibold text-orange-600 dark:text-orange-400">(DAO settles)</span>
                 </p>
               </div>
             </div>
@@ -142,8 +176,8 @@ export default function HowItWorksModal({ isOpen, onClose }: HowItWorksModalProp
                 <span className="text-sm font-semibold text-indigo-800">7</span>
               </div>
               <div>
-                <p className="theme-text-primary">
-                  In order to avoid the truth being manipulated by the DAO there is an external party in facts i.e. the Council to override DAO&apos;s decision and slash the DAO&apos;s $HYPE if needed <span className="font-semibold text-indigo-600">(Council reviews)</span>
+                <p className="text-gray-900 dark:text-white">
+                  In order to avoid the truth being manipulated by the DAO there is an external party in facts i.e. the Council to override DAO&apos;s decision and slash the DAO&apos;s $HYPE if needed <span className="font-semibold text-indigo-600 dark:text-indigo-400">(Council reviews)</span>
                 </p>
               </div>
             </div>
@@ -153,7 +187,7 @@ export default function HowItWorksModal({ isOpen, onClose }: HowItWorksModalProp
                 <span className="text-sm font-semibold text-red-800">8</span>
               </div>
               <div>
-                <p className="theme-text-primary">
+                <p className="text-gray-900 dark:text-white">
                   Anyone can then finalize the question to automatically distribute the bounty and slash related parties
                 </p>
               </div>
