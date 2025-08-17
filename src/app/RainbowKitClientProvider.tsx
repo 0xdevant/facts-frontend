@@ -8,6 +8,7 @@ import { useAccount } from 'wagmi';
 import { readContract } from 'viem/actions';
 import { config } from '@/lib/wagmi';
 import { factsContractAddress, factsAbi, publicClient } from '@/lib/contract';
+import HowItWorksModal from '@/components/HowItWorksModal';
 import '@rainbow-me/rainbowkit/styles.css';
 
 function ThemeToggle({ onThemeChange }: { onThemeChange: (isDark: boolean) => void }) {
@@ -54,6 +55,7 @@ const queryClient = new QueryClient();
 function Header({ isDarkMode, onThemeChange }: { isDarkMode: boolean; onThemeChange: (isDark: boolean) => void }) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isOwner, setIsOwner] = useState(false);
+  const [showHowItWorksModal, setShowHowItWorksModal] = useState(false);
   const { isConnected, address } = useAccount();
 
   // Check if user is owner
@@ -87,7 +89,8 @@ function Header({ isDarkMode, onThemeChange }: { isDarkMode: boolean; onThemeCha
   };
 
   return (
-    <header className="sticky top-0 z-50 backdrop-blur-md border-b transition-colors duration-200 theme-header">
+    <>
+      <header className="sticky top-0 z-50 backdrop-blur-md border-b transition-colors duration-200 theme-header">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           <Link href="/" className="flex items-center space-x-2">
@@ -101,10 +104,10 @@ function Header({ isDarkMode, onThemeChange }: { isDarkMode: boolean; onThemeCha
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center space-x-6">
             <Link href="/ask" className="theme-text-primary hover:text-cyan-500 transition-colors">
-              Ask Question
+              Ask
             </Link>
             <Link href="/questions" className="theme-text-primary hover:text-cyan-500 transition-colors">
-              Browse Questions
+              Browse
             </Link>
             {isConnected && (
               <Link href="/dashboard" className="theme-text-primary hover:text-cyan-500 transition-colors">
@@ -116,6 +119,12 @@ function Header({ isDarkMode, onThemeChange }: { isDarkMode: boolean; onThemeCha
                 Admin
               </Link>
             )}
+            <button
+              onClick={() => setShowHowItWorksModal(true)}
+              className="theme-text-primary hover:text-cyan-500 transition-colors"
+            >
+              How It Works
+            </button>
           </nav>
 
           <div className="flex items-center gap-3">
@@ -161,38 +170,47 @@ function Header({ isDarkMode, onThemeChange }: { isDarkMode: boolean; onThemeCha
         {isMobileMenuOpen && (
           <div className="md:hidden border-t border-gray-200 dark:border-gray-700">
             <nav className="px-2 pt-2 pb-3 space-y-1">
+                          <Link
+              href="/ask"
+              className="block px-3 py-2 rounded-md text-base font-medium theme-text-primary hover:text-cyan-500 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+              onClick={() => setIsMobileMenuOpen(false)}
+            >
+              Ask
+            </Link>
+                                      <Link
+              href="/questions"
+              className="block px-3 py-2 rounded-md text-base font-medium theme-text-primary hover:text-cyan-500 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+              onClick={() => setIsMobileMenuOpen(false)}
+            >
+              Browse
+            </Link>
+                        {isConnected && (
               <Link
-                href="/ask"
+                href="/dashboard"
                 className="block px-3 py-2 rounded-md text-base font-medium theme-text-primary hover:text-cyan-500 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
                 onClick={() => setIsMobileMenuOpen(false)}
               >
-                Ask Question
+                Dashboard
               </Link>
+            )}
+            {isOwner && (
               <Link
-                href="/questions"
-                className="block px-3 py-2 rounded-md text-base font-medium theme-text-primary hover:text-cyan-500 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                href="/admin"
+                className="block px-3 py-2 rounded-md text-base font-medium theme-text-primary hover:text-red-500 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors border-t border-gray-200 dark:border-gray-700 mt-2 pt-2"
                 onClick={() => setIsMobileMenuOpen(false)}
               >
-                Browse Questions
+                Admin
               </Link>
-              {isConnected && (
-                <Link
-                  href="/dashboard"
-                  className="block px-3 py-2 rounded-md text-base font-medium theme-text-primary hover:text-cyan-500 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                >
-                  Dashboard
-                </Link>
-              )}
-              {isOwner && (
-                <Link
-                  href="/admin"
-                  className="block px-3 py-2 rounded-md text-base font-medium theme-text-primary hover:text-red-500 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors border-t border-gray-200 dark:border-gray-700 mt-2 pt-2"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                >
-                  Admin
-                </Link>
-              )}
+            )}
+            <button
+              onClick={() => {
+                setShowHowItWorksModal(true);
+                setIsMobileMenuOpen(false);
+              }}
+              className="block w-full text-left px-3 py-2 rounded-md text-base font-medium theme-text-primary hover:text-cyan-500 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+            >
+              How It Works
+            </button>
               <div className="border-t border-gray-200 dark:border-gray-700 pt-2 mt-2">
                 <div className="px-3 py-2">
                   <ThemeToggle onThemeChange={onThemeChange} />
@@ -201,8 +219,14 @@ function Header({ isDarkMode, onThemeChange }: { isDarkMode: boolean; onThemeCha
             </nav>
           </div>
         )}
-      </div>
-    </header>
+              </div>
+      </header>
+
+      <HowItWorksModal 
+        isOpen={showHowItWorksModal} 
+        onClose={() => setShowHowItWorksModal(false)} 
+      />
+    </>
   );
 }
 
