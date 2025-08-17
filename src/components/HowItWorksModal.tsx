@@ -98,7 +98,7 @@ export default function HowItWorksModal({ isOpen, onClose }: HowItWorksModalProp
               </div>
               <div>
                 <p className="theme-text-primary">
-                  The answer with the most vouched gets selected to be the "most-truthful" answer
+                  The answer with the most vouched gets selected to be the &ldquo;most-truthful&rdquo; answer
                 </p>
                 <div className="mt-2 space-y-2">
                   <div className="p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
@@ -132,7 +132,7 @@ export default function HowItWorksModal({ isOpen, onClose }: HowItWorksModalProp
               </div>
               <div>
                 <p className="theme-text-primary">
-                  If it gets accepted by the DAO - part of the hunter's stake will be slashed to challenger, part of vouchers' stake will be slashed to the DAO <span className="font-semibold text-orange-600">(DAO settles)</span>
+                  If it gets accepted by the DAO - part of the hunter&apos;s stake will be slashed to challenger, part of vouchers&apos; stake will be slashed to the DAO <span className="font-semibold text-orange-600">(DAO settles)</span>
                 </p>
               </div>
             </div>
@@ -143,7 +143,7 @@ export default function HowItWorksModal({ isOpen, onClose }: HowItWorksModalProp
               </div>
               <div>
                 <p className="theme-text-primary">
-                  In order to avoid the truth being manipulated by the DAO there is an external party in facts i.e. the Council to override DAO's decision and slash the DAO's $HYPE if needed <span className="font-semibold text-indigo-600">(Council reviews)</span>
+                  In order to avoid the truth being manipulated by the DAO there is an external party in facts i.e. the Council to override DAO&apos;s decision and slash the DAO&apos;s $HYPE if needed <span className="font-semibold text-indigo-600">(Council reviews)</span>
                 </p>
               </div>
             </div>
