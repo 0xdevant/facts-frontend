@@ -10,6 +10,8 @@ on:
 jobs:
   detect-contract-change:
     runs-on: ubuntu-latest
+    env:
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
     
     steps:
       - name: Checkout code
@@ -26,27 +28,26 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Debug environment
+        run: |
+          echo "Testing secret access..."
+          if [ "${{ secrets.DATABASE_URL }}" != "" ]; then
+            echo "✅ Secret is accessible via secrets context"
+          else
+            echo "❌ Secret is not accessible via secrets context"
+          fi
+
       - name: Extract contract address from current commit
         id: current-address
         run: |
-          CURRENT_ADDRESS=$(node -e "
-            const fs = require('fs');
-            const contractFile = fs.readFileSync('src/lib/contract.ts', 'utf8');
-            const match = contractFile.match(/factsContractAddress\s*=\s*["']([^"']+)["']/);
-            console.log(match ? match[1] : '');
-          ")
+          CURRENT_ADDRESS=$(node scripts/extract-contract-address.js)
           echo "current_address=$CURRENT_ADDRESS" >> $GITHUB_OUTPUT
           echo "Current contract address: $CURRENT_ADDRESS"
 
       - name: Extract contract address from previous commit
         id: previous-address
         run: |
-          PREVIOUS_ADDRESS=$(git show HEAD~1:src/lib/contract.ts | node -e "
-            const fs = require('fs');
-            const contractFile = fs.readFileSync(0, 'utf8');
-            const match = contractFile.match(/factsContractAddress\s*=\s*["']([^"']+)["']/);
-            console.log(match ? match[1] : '');
-          ")
+          PREVIOUS_ADDRESS=$(git show HEAD~1:src/lib/contract.ts | node scripts/extract-contract-address.js)
           echo "previous_address=$PREVIOUS_ADDRESS" >> $GITHUB_OUTPUT
           echo "Previous contract address: $PREVIOUS_ADDRESS"
 
@@ -66,8 +67,13 @@ jobs:
         run: |
           echo "Contract address changed. Clearing database data..."
           
-          # Set up environment variables (you'll need to add these to your GitHub secrets)
-          export DATABASE_URL="${{ secrets.DATABASE_URL }}"
+          # Debug: Check environment variable (without exposing the value)
+          if [ -n "$DATABASE_URL" ]; then
+            echo "✅ DATABASE_URL is set in this step"
+          else
+            echo "❌ DATABASE_URL is not set in this step"
+            exit 1
+          fi
           
           # Generate Prisma client
           npx prisma generate

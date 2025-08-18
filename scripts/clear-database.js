@@ -1,6 +1,20 @@
 const { PrismaClient } = require('@prisma/client');
 
-const prisma = new PrismaClient();
+// Debug: Check if DATABASE_URL is available
+if (!process.env.DATABASE_URL) {
+  console.error('ERROR: DATABASE_URL environment variable is not set');
+  process.exit(1);
+}
+
+console.log('DATABASE_URL is available, connecting to database...');
+
+const prisma = new PrismaClient({
+  datasources: {
+    db: {
+      url: process.env.DATABASE_URL,
+    },
+  },
+});
 
 async function clearData() {
   try {
