@@ -67,14 +67,6 @@ jobs:
         run: |
           echo "Contract address changed. Clearing database data..."
           
-          # Debug: Check environment variable (without exposing the value)
-          if [ -n "$DATABASE_URL" ]; then
-            echo "✅ DATABASE_URL is set in this step"
-          else
-            echo "❌ DATABASE_URL is not set in this step"
-            exit 1
-          fi
-          
           # Generate Prisma client
           npx prisma generate
           
@@ -87,35 +79,3 @@ jobs:
         if: steps.address-changed.outputs.address_changed == 'false'
         run: |
           echo "No contract address change detected. Skipping database reset."
-
-      - name: Create issue for manual review (optional)
-        if: steps.address-changed.outputs.address_changed == 'true'
-        uses: actions/github-script@v7
-        with:
-          script: |
-            github.rest.issues.create({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              title: '🗑️ Database Reset - Contract Address Changed',
-              body: `## Contract Address Change Detected
-            
-            **Previous Address:** \`${{ steps.previous-address.outputs.previous_address }}\`
-            **New Address:** \`${{ steps.current-address.outputs.current_address }}\`
-            
-            The database has been automatically reset to remove old data from the previous contract deployment.
-            
-            ### What happened:
-            - Contract address changed in \`src/lib/contract.ts\`
-            - Database data was automatically cleared (sources and questions tables)
-            - Database schema was preserved
-            - All existing questions and sources have been removed
-            
-            ### Next steps:
-            - Verify the new contract is working correctly
-            - Test the application with the new contract
-            - Monitor for any issues
-            
-            **Commit:** ${{ github.sha }}
-            **Triggered by:** ${{ github.actor }}`,
-              labels: ['database', 'contract-change', 'automation']
-            })
