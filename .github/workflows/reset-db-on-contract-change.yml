@@ -1,0 +1,139 @@
+name: Reset Database on Contract Address Change
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'src/lib/contract.ts'
+  workflow_dispatch: # Allow manual trigger
+
+jobs:
+  detect-contract-change:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2 # Need at least 2 commits to compare
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Extract contract address from current commit
+        id: current-address
+        run: |
+          CURRENT_ADDRESS=$(node -e "
+            const fs = require('fs');
+            const contractFile = fs.readFileSync('src/lib/contract.ts', 'utf8');
+            const match = contractFile.match(/factsContractAddress\s*=\s*["']([^"']+)["']/);
+            console.log(match ? match[1] : '');
+          ")
+          echo "current_address=$CURRENT_ADDRESS" >> $GITHUB_OUTPUT
+          echo "Current contract address: $CURRENT_ADDRESS"
+
+      - name: Extract contract address from previous commit
+        id: previous-address
+        run: |
+          PREVIOUS_ADDRESS=$(git show HEAD~1:src/lib/contract.ts | node -e "
+            const fs = require('fs');
+            const contractFile = fs.readFileSync(0, 'utf8');
+            const match = contractFile.match(/factsContractAddress\s*=\s*["']([^"']+)["']/);
+            console.log(match ? match[1] : '');
+          ")
+          echo "previous_address=$PREVIOUS_ADDRESS" >> $GITHUB_OUTPUT
+          echo "Previous contract address: $PREVIOUS_ADDRESS"
+
+      - name: Check if contract address changed
+        id: address-changed
+        run: |
+          if [ "${{ steps.current-address.outputs.current_address }}" != "${{ steps.previous-address.outputs.previous_address }}" ]; then
+            echo "address_changed=true" >> $GITHUB_OUTPUT
+            echo "Contract address changed from ${{ steps.previous-address.outputs.previous_address }} to ${{ steps.current-address.outputs.current_address }}"
+          else
+            echo "address_changed=false" >> $GITHUB_OUTPUT
+            echo "Contract address unchanged"
+          fi
+
+      - name: Reset database if contract address changed
+        if: steps.address-changed.outputs.address_changed == 'true'
+        run: |
+          echo "Contract address changed. Clearing database data..."
+          
+          # Set up environment variables (you'll need to add these to your GitHub secrets)
+          export DATABASE_URL="${{ secrets.DATABASE_URL }}"
+          
+          # Generate Prisma client
+          npx prisma generate
+          
+          # Clear all data from tables (preserves schema)
+          node -e "
+            const { PrismaClient } = require('@prisma/client');
+            const prisma = new PrismaClient();
+            
+            async function clearData() {
+              try {
+                console.log('Clearing all sources...');
+                await prisma.source.deleteMany({});
+                console.log('Sources cleared successfully');
+                
+                console.log('Clearing all questions...');
+                await prisma.question.deleteMany({});
+                console.log('Questions cleared successfully');
+                
+                console.log('Database data cleared successfully');
+              } catch (error) {
+                console.error('Error clearing database:', error);
+                process.exit(1);
+              } finally {
+                await prisma.\$disconnect();
+              }
+            }
+            
+            clearData();
+          "
+          
+          echo "Database data cleared successfully"
+
+      - name: Skip database reset if no change
+        if: steps.address-changed.outputs.address_changed == 'false'
+        run: |
+          echo "No contract address change detected. Skipping database reset."
+
+      - name: Create issue for manual review (optional)
+        if: steps.address-changed.outputs.address_changed == 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: '🗑️ Database Reset - Contract Address Changed',
+              body: `## Contract Address Change Detected
+            
+            **Previous Address:** \`${{ steps.previous-address.outputs.previous_address }}\`
+            **New Address:** \`${{ steps.current-address.outputs.current_address }}\`
+            
+            The database has been automatically reset to remove old data from the previous contract deployment.
+            
+            ### What happened:
+            - Contract address changed in \`src/lib/contract.ts\`
+            - Database data was automatically cleared (sources and questions tables)
+            - Database schema was preserved
+            - All existing questions and sources have been removed
+            
+            ### Next steps:
+            - Verify the new contract is working correctly
+            - Test the application with the new contract
+            - Monitor for any issues
+            
+            **Commit:** ${{ github.sha }}
+            **Triggered by:** ${{ github.actor }}`,
+              labels: ['database', 'contract-change', 'automation']
+            })

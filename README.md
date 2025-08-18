@@ -1,4 +1,6 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+facts.hype web app
+
+A crowd-sourced truth-seeking engine that is maximally aligned with HyperLiquid.
 
 ## Getting Started
 
@@ -16,21 +18,27 @@ bun dev
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## How it works
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+facts.hype provides a way for users to ask any questions and get the most reliable and credible answer verified by the crowd, with a dispute resolution mechanism built-in.
 
-## Learn More
+Phases: Ask => Hunting => Vouch => Challenge => Settle => Review => Finalize(distribute/slash)
 
-To learn more about Next.js, take a look at the following resources:
+1. Users can ask any question and choose to attach a bounty **(Truth-seeker asks)**
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+2. Others can submit different answers after depositing $HYPE to be a hunter **(Hunter hunts)**
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+3. Others can vouch for the answer they believe to be true by staking $HYPE on top **(Voucher vouches)**
 
-## Deploy on Vercel
+4. The answer with the most vouched gets selected to be the “most-truthful” answer
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+   - Hunter and vouchers of the selected answer will share the bounty
+   - If there is only one answer or no answer gets more vouched than the others, the result can be settled immediately and no bounty will be distributed
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+5. Anyone can submit a challenge after the hunting period by paying $HYPE **(Challenger challenges)**
+
+6. If it gets accepted by the DAO - part of the hunter's stake will be slashed to challenger, part of vouchers' stake will be slashed to the DAO **(DAO settles)**
+
+7. In order to avoid the truth being manipulated by the DAO there is an external party in facts i.e. the Council to override DAO's decision and slash the DAO's $HYPE if needed **(Council reviews)**
+
+8. Anyone can then finalize the question to automatically distribute the bounty and slash related parties

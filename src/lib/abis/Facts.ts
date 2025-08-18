@@ -119,10 +119,6 @@ export const factsAbi = [
     stateMutability: "nonpayable",
   },
   {
-    type: "receive",
-    stateMutability: "payable",
-  },
-  {
     type: "function",
     name: "COUNCIL",
     inputs: [],
@@ -1497,6 +1493,11 @@ export const factsAbi = [
   {
     type: "error",
     name: "AlreadyFinalized",
+    inputs: [],
+  },
+  {
+    type: "error",
+    name: "AlreadySettledByDAO",
     inputs: [],
   },
   {
