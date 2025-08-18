@@ -208,11 +208,22 @@ const formatDate = (timestamp: bigint | undefined): string => {
       return 'Date unavailable';
     }
     
-    return date.toLocaleDateString('en-US', {
-      year: 'numeric', 
-      month: 'short', 
-      day: 'numeric' 
-    });
+    const currentYear = new Date().getFullYear();
+    const dateYear = date.getFullYear();
+    
+    // If the date is in the current year, don't show the year
+    if (dateYear === currentYear) {
+      return date.toLocaleDateString('en-US', {
+        month: 'short', 
+        day: 'numeric' 
+      });
+    } else {
+      return date.toLocaleDateString('en-US', {
+        year: 'numeric', 
+        month: 'short', 
+        day: 'numeric' 
+      });
+    }
   } catch (error) {
     console.error('Error formatting date:', error);
     return 'Date unavailable';
@@ -636,7 +647,7 @@ const QuestionDetails = ({
         <InfoCard
           icon={
             <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 2v20m5-18H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
             </svg>
           }
           title="Bounty"
