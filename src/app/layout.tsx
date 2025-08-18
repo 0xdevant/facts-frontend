@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
+import { SpeedInsights } from "@vercel/speed-insights/next"
 import "./globals.css";
 import RainbowKitClientProvider from "./RainbowKitClientProvider";
-
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
@@ -29,6 +29,7 @@ export default function RootLayout({
         <RainbowKitClientProvider>
           {children}
         </RainbowKitClientProvider>
+        <SpeedInsights />
       </body>
     </html>
   );
