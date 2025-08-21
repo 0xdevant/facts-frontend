@@ -3,6 +3,7 @@ import { Inter } from "next/font/google";
 import { SpeedInsights } from "@vercel/speed-insights/next"
 import "./globals.css";
 import RainbowKitClientProvider from "./RainbowKitClientProvider";
+import Footer from "@/components/Footer";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
@@ -25,9 +26,12 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={inter.className}>
+      <body className={`${inter.className} flex flex-col min-h-screen`}>
         <RainbowKitClientProvider>
-          {children}
+          <main className="flex-1">
+            {children}
+          </main>
+          <Footer />
         </RainbowKitClientProvider>
         <SpeedInsights />
       </body>
