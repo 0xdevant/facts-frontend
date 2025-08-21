@@ -262,6 +262,53 @@ const formatBountyAmountExact = (amount: bigint): string => {
   return `${inEther} HYPE`;
 };
 
+const formatExactTime = (timestamp: bigint | undefined): string => {
+  try {
+    if (!timestamp) {
+      return 'Time unavailable';
+    }
+    
+    // Handle very large BigInt values safely
+    let timestampNumber: number;
+    if (timestamp > BigInt(Number.MAX_SAFE_INTEGER)) {
+      // For very large numbers, try to extract the relevant part
+      const timestampStr = timestamp.toString();
+      if (timestampStr.length > 13) {
+        // If it's longer than 13 digits, it might be in nanoseconds or microseconds
+        timestampNumber = parseInt(timestampStr.slice(0, 10));
+      } else {
+        timestampNumber = parseInt(timestampStr);
+      }
+    } else {
+      timestampNumber = Number(timestamp);
+    }
+    
+    // Try different timestamp formats
+    let date = new Date(timestampNumber * 1000); // Unix timestamp in seconds
+    
+    if (isNaN(date.getTime())) {
+      date = new Date(timestampNumber); // Unix timestamp in milliseconds
+    }
+    
+    if (isNaN(date.getTime())) {
+      return 'Time unavailable';
+    }
+    
+    return date.toLocaleString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      timeZoneName: 'short'
+    });
+  } catch (error) {
+    console.error('Error formatting exact time:', error);
+    return 'Time unavailable';
+  }
+};
+
 // Function to convert text with URLs to JSX with clickable links
 const renderTextWithLinks = (text: string): React.ReactNode => {
   if (!text || text === "No sources provided") {
@@ -683,6 +730,7 @@ const QuestionDetails = ({
           gradientTo=""
           borderColor="border-orange-500"
           textSize="text-xs"
+          tooltip={`${formatExactTime(question.slotData.startHuntAt)} - ${formatExactTime(question.slotData.endHuntAt)}`}
         />
       </div>
     </div>
