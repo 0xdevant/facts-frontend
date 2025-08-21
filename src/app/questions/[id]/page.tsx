@@ -617,8 +617,9 @@ const QuestionDetails = ({
               </div>
             )}
 
-            {/* Finalize Button - Show when review period is over and question is not finalized */}
-            {isAfterReviewPeriod && !question.slotData.finalized && (
+            {/* Finalize Button - Show when review period is over and question is not finalized, but hide in specific cases */}
+            {isAfterReviewPeriod && !question.slotData.finalized && 
+             !((mostVouchedAnsId === 65535 && isAfterHuntPeriod) || (!question.slotData.challenged && isAfterChallengePeriod)) && (
               <div className="flex gap-2">
                 <button
                   onClick={onFinalize}
