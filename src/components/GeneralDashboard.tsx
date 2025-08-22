@@ -794,14 +794,40 @@ export default function GeneralDashboard() {
         return;
       }
 
-      // Create array of all question IDs from 0 to numQuestions-1
-      const questionIds = Array.from({ length: numQuestions }, (_, i) => BigInt(i));
+      // Check each question's platform fees and only include those with fees to claim
+      const questionIdsWithFees: bigint[] = [];
+      
+      for (let i = 0; i < numQuestions; i++) {
+        try {
+          const platformFeesResult = await readContract(publicClient, {
+            address: factsContractAddress,
+            abi: factsAbi,
+            functionName: 'platformFees',
+            args: [BigInt(i)],
+          });
+          
+          const [protocolFee, daoFee] = platformFeesResult as readonly [bigint, bigint];
+          const feeToCheck = feeType === 'protocol' ? protocolFee : daoFee;
+          
+          if (feeToCheck > BigInt(0)) {
+            questionIdsWithFees.push(BigInt(i));
+          }
+        } catch (error) {
+          console.warn(`Failed to get platform fees for question ${i}:`, error);
+          // Skip this question if we can't get its fees
+        }
+      }
+      
+      if (questionIdsWithFees.length === 0) {
+        setError(`No questions found with ${feeType} fees to claim`);
+        return;
+      }
       
       writeContract({
         address: factsContractAddress as `0x${string}`,
         abi: factsAbi,
         functionName: 'claimPlatformFee',
-        args: [questionIds, address as `0x${string}`],
+        args: [questionIdsWithFees, address as `0x${string}`],
       });
     } catch (e) {
       console.error(`Error claiming ${feeType} fees:`, e);
