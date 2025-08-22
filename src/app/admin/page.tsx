@@ -38,8 +38,7 @@ export default function AdminPage() {
   // Distribution Config Form State
   const [distributionConfig, setDistributionConfig] = useState({
     hunterBP: "",
-    voucherBP: "",
-    protocolBP: ""
+    voucherBP: ""
   });
 
   // Check if user is owner
@@ -106,8 +105,7 @@ export default function AdminPage() {
 
         setDistributionConfig({
           hunterBP: distributionConfigData.hunterBP.toString(),
-          voucherBP: distributionConfigData.voucherBP.toString(),
-          protocolBP: distributionConfigData.protocolBP.toString()
+          voucherBP: distributionConfigData.voucherBP.toString()
         });
       } catch (error) {
         console.error('Error loading config:', error);
@@ -205,10 +203,20 @@ export default function AdminPage() {
     setSuccessMessage("");
 
     try {
+      const hunterBP = BigInt(distributionConfig.hunterBP);
+      const voucherBP = BigInt(distributionConfig.voucherBP);
+      const protocolBP = BigInt(10000) - hunterBP - voucherBP;
+      
+      // Validate that the sum doesn't exceed 10000 BP
+      if (hunterBP + voucherBP > BigInt(10000)) {
+        setError("Hunter BP + Voucher BP cannot exceed 10000 basis points (100%)");
+        return;
+      }
+      
       const newDistributionConfig = {
-        hunterBP: BigInt(distributionConfig.hunterBP),
-        voucherBP: BigInt(distributionConfig.voucherBP),
-        protocolBP: BigInt(distributionConfig.protocolBP)
+        hunterBP,
+        voucherBP,
+        protocolBP
       };
 
       writeContract({
@@ -448,6 +456,8 @@ export default function AdminPage() {
                   <label className="block text-sm font-medium mb-2 theme-text-primary">Hunter BP</label>
                   <input
                     type="number"
+                    min="0"
+                    max="10000"
                     value={distributionConfig.hunterBP}
                     onChange={(e) => setDistributionConfig({...distributionConfig, hunterBP: e.target.value})}
                     className="input-modern w-full"
@@ -458,6 +468,8 @@ export default function AdminPage() {
                   <label className="block text-sm font-medium mb-2 theme-text-primary">Voucher BP</label>
                   <input
                     type="number"
+                    min="0"
+                    max="10000"
                     value={distributionConfig.voucherBP}
                     onChange={(e) => setDistributionConfig({...distributionConfig, voucherBP: e.target.value})}
                     className="input-modern w-full"
@@ -465,14 +477,21 @@ export default function AdminPage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-2 theme-text-primary">Protocol BP</label>
+                  <label className="block text-sm font-medium mb-2 theme-text-primary">Protocol BP (Auto-calculated)</label>
                   <input
                     type="number"
-                    value={distributionConfig.protocolBP}
-                    onChange={(e) => setDistributionConfig({...distributionConfig, protocolBP: e.target.value})}
-                    className="input-modern w-full"
-                    required
+                    value={(() => {
+                      const hunterBP = parseInt(distributionConfig.hunterBP) || 0;
+                      const voucherBP = parseInt(distributionConfig.voucherBP) || 0;
+                      const protocolBP = 10000 - hunterBP - voucherBP;
+                      return protocolBP >= 0 ? protocolBP.toString() : "0";
+                    })()}
+                    className="input-modern w-full bg-gray-100 dark:bg-gray-700 cursor-not-allowed"
+                    readOnly
                   />
+                  <p className="text-xs text-gray-500 mt-1">
+                    Protocol BP = 10000 - Hunter BP - Voucher BP
+                  </p>
                 </div>
               </div>
               <button

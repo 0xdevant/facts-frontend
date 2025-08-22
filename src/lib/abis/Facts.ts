@@ -61,18 +61,13 @@ export const factsAbi = [
             components: [
               {
                 name: "hunterBP",
-                type: "uint64",
-                internalType: "uint64",
+                type: "uint128",
+                internalType: "uint128",
               },
               {
                 name: "voucherBP",
-                type: "uint64",
-                internalType: "uint64",
-              },
-              {
-                name: "protocolBP",
-                type: "uint64",
-                internalType: "uint64",
+                type: "uint128",
+                internalType: "uint128",
               },
             ],
           },
@@ -146,7 +141,7 @@ export const factsAbi = [
   },
   {
     type: "function",
-    name: "_isValidAnswerFormat",
+    name: "_isValidAnsFormat",
     inputs: [
       {
         name: "questionType",
@@ -297,7 +292,7 @@ export const factsAbi = [
         internalType: "uint256",
       },
       {
-        name: "claimer",
+        name: "voucher",
         type: "address",
         internalType: "address",
       },
@@ -440,18 +435,13 @@ export const factsAbi = [
         components: [
           {
             name: "hunterBP",
-            type: "uint64",
-            internalType: "uint64",
+            type: "uint128",
+            internalType: "uint128",
           },
           {
             name: "voucherBP",
-            type: "uint64",
-            internalType: "uint64",
-          },
-          {
-            name: "protocolBP",
-            type: "uint64",
-            internalType: "uint64",
+            type: "uint128",
+            internalType: "uint128",
           },
         ],
       },
@@ -813,7 +803,7 @@ export const factsAbi = [
         internalType: "uint256",
       },
       {
-        name: "answerId",
+        name: "finalAnswerId",
         type: "uint16",
         internalType: "uint16",
       },
@@ -1067,18 +1057,13 @@ export const factsAbi = [
         components: [
           {
             name: "hunterBP",
-            type: "uint64",
-            internalType: "uint64",
+            type: "uint128",
+            internalType: "uint128",
           },
           {
             name: "voucherBP",
-            type: "uint64",
-            internalType: "uint64",
-          },
-          {
-            name: "protocolBP",
-            type: "uint64",
-            internalType: "uint64",
+            type: "uint128",
+            internalType: "uint128",
           },
         ],
       },
@@ -1388,7 +1373,7 @@ export const factsAbi = [
         internalType: "uint256",
       },
       {
-        name: "answerId",
+        name: "finalAnswerId",
         type: "uint256",
         indexed: true,
         internalType: "uint256",
@@ -1502,7 +1487,7 @@ export const factsAbi = [
   },
   {
     type: "error",
-    name: "CannotChallengeSameAnswer",
+    name: "CannotChallengeSameAns",
     inputs: [],
   },
   {
@@ -1513,6 +1498,11 @@ export const factsAbi = [
   {
     type: "error",
     name: "CannotVouchForSelf",
+    inputs: [],
+  },
+  {
+    type: "error",
+    name: "CannotVouchWhenOneAns",
     inputs: [],
   },
   {
@@ -1542,7 +1532,7 @@ export const factsAbi = [
   },
   {
     type: "error",
-    name: "InvalidAnswerFormat",
+    name: "InvalidAnsFormat",
     inputs: [
       {
         name: "questionType",
@@ -1569,11 +1559,6 @@ export const factsAbi = [
   {
     type: "error",
     name: "NotFinalized",
-    inputs: [],
-  },
-  {
-    type: "error",
-    name: "NotHunter",
     inputs: [],
   },
   {
@@ -1623,7 +1608,12 @@ export const factsAbi = [
   },
   {
     type: "error",
-    name: "OnlyOwnerOrProtocolFeeReceiver",
+    name: "OnlyHunter",
+    inputs: [],
+  },
+  {
+    type: "error",
+    name: "OnlyOwnerOrFeeReceiver",
     inputs: [],
   },
   {
@@ -1660,17 +1650,12 @@ export const factsAbi = [
   },
   {
     type: "error",
-    name: "TooManyAnswers",
+    name: "TooManyAns",
     inputs: [],
   },
   {
     type: "error",
     name: "UnnecessaryChallenge",
-    inputs: [],
-  },
-  {
-    type: "error",
-    name: "ZeroAddress",
     inputs: [],
   },
 ] as const;
