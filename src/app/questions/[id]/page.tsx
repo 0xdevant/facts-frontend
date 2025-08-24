@@ -1791,7 +1791,7 @@ export default function QuestionDetailPage() {
         />
         
         {/* Hunter Status Check for Answer Submission - Only show during hunt period */}
-        {Number(question.slotData.endHuntAt) > Math.floor(Date.now() / 1000) && (
+        {Number(question.slotData.startHuntAt) <= Math.floor(Date.now() / 1000) && Number(question.slotData.endHuntAt) > Math.floor(Date.now() / 1000) && (
           <HunterStatus 
             key={hunterRegistrationKey}
             fallback={
@@ -1817,6 +1817,18 @@ export default function QuestionDetailPage() {
               questionId={question.id}
             />
           </HunterStatus>
+        )}
+
+        {/* Hunt Period Not Started Notice */}
+        {Number(question.slotData.startHuntAt) > Math.floor(Date.now() / 1000) && (
+          <div className="card p-6 mb-8">
+            <div className="text-center">
+              <h3 className="text-lg font-semibold mb-2 theme-text-primary">Hunt Period Not Started</h3>
+              <p className="theme-text-secondary">
+                The hunt period has not started yet. You can submit answers starting from {formatExactTime(question.slotData.startHuntAt)}.
+              </p>
+            </div>
+          </div>
         )}
 
         {/* Hunt Period Ended Notice */}
@@ -1852,13 +1864,33 @@ export default function QuestionDetailPage() {
           )}
         </div>
 
-        {/* Vouching Form - Only show during hunt period */}
-        {answers.length > 0 && Number(question.slotData.endHuntAt) > Math.floor(Date.now() / 1000) && (
+        {/* Vouching Form - Only show during hunt period and when there are multiple answers */}
+        {answers.length > 1 && Number(question.slotData.endHuntAt) > Math.floor(Date.now() / 1000) && (
           <VouchForm 
             answers={answers}
             onVouch={handleVouch}
             loading={isTransactionLoading}
           />
+        )}
+
+        {/* Message when only one answer exists during hunt period */}
+        {answers.length === 1 && Number(question.slotData.endHuntAt) > Math.floor(Date.now() / 1000) && (
+          <div className="card p-8 mb-8">
+            <div className="text-center">
+              <h2 className="text-2xl font-bold mb-4 theme-text-primary">Vouching</h2>
+              <div className="flex items-center justify-center mb-4">
+                <svg className="w-8 h-8 text-blue-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <p className="text-lg theme-text-secondary">
+                  You can only vouch when there are multiple answers to choose from.
+                </p>
+              </div>
+              <p className="text-sm text-gray-500 dark:text-gray-400">
+                Currently there is only 1 answer. Submit another answer or wait for more answers to be able to vouch.
+              </p>
+            </div>
+          </div>
         )}
 
         {/* Challenge Form - Show during challenge period for multiple challengers */}
