@@ -260,24 +260,67 @@ const QuestionCard = ({ question, challengePeriod }: { question: Question & { id
   </div>
 );
 
-const EmptyState = ({ error }: { error: string }) => (
-  <div className="card p-12 text-center">
-    <div className="w-16 h-16 bg-gradient-to-br from-gray-400 to-gray-500 rounded-full flex items-center justify-center mx-auto mb-4">
-      <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-      </svg>
+const EmptyState = ({ error, activeFilter }: { error: string; activeFilter?: 'active' | 'challenged' | 'finalized' }) => {
+  const getEmptyStateContent = () => {
+    if (error) {
+      return {
+        title: "Error Loading Questions",
+        message: "There was an issue loading the questions.",
+        showAskButton: false
+      };
+    }
+    
+    switch (activeFilter) {
+      case 'active':
+        return {
+          title: "No Active Questions",
+          message: "There are currently no active questions available. Check back later or ask a new question!",
+          showAskButton: true
+        };
+      case 'challenged':
+        return {
+          title: "No Challenged Questions",
+          message: "There are currently no challenged questions.",
+          showAskButton: false
+        };
+      case 'finalized':
+        return {
+          title: "No Finalized Questions",
+          message: "There are currently no finalized questions.",
+          showAskButton: false
+        };
+      default:
+        return {
+          title: "No Questions Yet",
+          message: "Be the first to ask a question and start earning rewards!",
+          showAskButton: true
+        };
+    }
+  };
+
+  const content = getEmptyStateContent();
+
+  return (
+    <div className="card p-12 text-center">
+      <div className="w-16 h-16 bg-gradient-to-br from-gray-400 to-gray-500 rounded-full flex items-center justify-center mx-auto mb-4">
+        <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+      </div>
+      <h3 className="text-xl font-semibold theme-text-primary mb-2">
+        {content.title}
+      </h3>
+      <p className="theme-text-secondary mb-6">
+        {content.message}
+      </p>
+      {content.showAskButton && (
+        <Link href="/ask" className="button-primary px-6 py-3">
+          Ask Your First Question
+        </Link>
+      )}
     </div>
-    <h3 className="text-xl font-semibold theme-text-primary mb-2">
-      {error ? "Error Loading Questions" : "No Questions Yet"}
-    </h3>
-    <p className="theme-text-secondary mb-6">
-      {error ? "There was an issue loading the questions." : "Be the first to ask a question and start earning rewards!"}
-    </p>
-    <Link href="/ask" className="button-primary px-6 py-3">
-      Ask Your First Question
-    </Link>
-  </div>
-);
+  );
+};
 
 const LoadingState = () => (
   <div className="card p-12 text-center">
@@ -294,10 +337,12 @@ const LoadingState = () => (
 // Main component
 export default function QuestionsPage() {
   const [questions, setQuestions] = useState<(Question & { id: number })[]>([]);
+  const [filteredQuestions, setFilteredQuestions] = useState<(Question & { id: number })[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [questionCount, setQuestionCount] = useState(0);
   const [challengePeriod, setChallengePeriod] = useState<number>(0);
+  const [activeFilter, setActiveFilter] = useState<'active' | 'challenged' | 'finalized'>('active');
 
   useEffect(() => {
     async function fetchQuestions() {
@@ -380,6 +425,31 @@ export default function QuestionsPage() {
     fetchQuestions();
   }, []);
 
+  // Filter questions based on active filter
+  useEffect(() => {
+    if (questions.length === 0) {
+      setFilteredQuestions([]);
+      return;
+    }
+
+    const filtered = questions.filter(question => {
+      const status = getQuestionStatus(question, challengePeriod).status;
+      
+      switch (activeFilter) {
+        case 'active':
+          return status === 'Active' || status === 'Challenge Period' || status === 'Settling';
+        case 'challenged':
+          return status === 'Challenged';
+        case 'finalized':
+          return status === 'Finalized' || status === 'Reviewed';
+        default:
+          return true;
+      }
+    });
+
+    setFilteredQuestions(filtered);
+  }, [questions, activeFilter, challengePeriod]);
+
   if (loading) {
     return (
       <div className="min-h-screen theme-bg">
@@ -408,7 +478,11 @@ export default function QuestionsPage() {
           <div className="flex items-center gap-4 text-sm theme-text-secondary">
             <div className="flex items-center gap-2">
               <div className="w-3 h-3 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-full"></div>
-              <span>{questionCount} questions found</span>
+              <span>
+                {activeFilter === 'active' ? 'Active' : 
+                 activeFilter === 'challenged' ? 'Challenged' : 
+                 'Finalized'} questions: {filteredQuestions.length} of {questionCount} total
+              </span>
             </div>
             <div className="flex items-center gap-2">
               <div className="w-3 h-3 bg-gradient-to-r from-green-500 to-green-600 rounded-full"></div>
@@ -417,12 +491,48 @@ export default function QuestionsPage() {
           </div>
         </div>
 
+        {/* Filter Buttons */}
+        <div className="mb-6">
+          <div className="flex flex-wrap gap-3">
+            <button
+              onClick={() => setActiveFilter('active')}
+              className={`px-4 py-2 rounded-lg font-medium transition-all duration-200 ${
+                activeFilter === 'active'
+                  ? 'bg-gradient-to-r from-green-500 to-green-600 text-white shadow-md'
+                  : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
+              }`}
+            >
+              Active
+            </button>
+            <button
+              onClick={() => setActiveFilter('challenged')}
+              className={`px-4 py-2 rounded-lg font-medium transition-all duration-200 ${
+                activeFilter === 'challenged'
+                  ? 'bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-md'
+                  : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
+              }`}
+            >
+              Challenged
+            </button>
+            <button
+              onClick={() => setActiveFilter('finalized')}
+              className={`px-4 py-2 rounded-lg font-medium transition-all duration-200 ${
+                activeFilter === 'finalized'
+                  ? 'bg-gradient-to-r from-gray-500 to-gray-600 text-white shadow-md'
+                  : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
+              }`}
+            >
+              Finalized
+            </button>
+          </div>
+        </div>
+
         {/* Questions Grid */}
-        {questions.length === 0 ? (
-          <EmptyState error={error} />
+        {filteredQuestions.length === 0 ? (
+          <EmptyState error={error} activeFilter={activeFilter} />
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {questions.map((question) => (
+            {filteredQuestions.map((question) => (
               <QuestionCard key={question.id} question={question} challengePeriod={challengePeriod} />
             ))}
           </div>

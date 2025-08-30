@@ -33,11 +33,11 @@ Phases: Ask => Hunting => Vouch => Challenge => Settle => Review => Finalize(dis
 4. The answer with the most vouched gets selected to be the “most-truthful” answer
 
    - Hunter and vouchers of the selected answer will share the bounty
-   - If there is only one answer or no answer gets more vouched than the others, the result can be settled immediately and no bounty will be distributed
+   - If there is no submission, or no answer gets more vouched than the others, the result can be settled immediately and no bounty will be distributed
 
 5. Anyone can submit a challenge after the hunting period by paying $HYPE **(Challenger challenges)**
 
-6. If it gets accepted by the DAO - part of the hunter's stake will be slashed to challenger, part of vouchers' stake will be slashed to the DAO **(DAO settles)**
+6. If it gets accepted by the DAO - part of the hunter's stake will be **slashed** to challenger, part of vouchers' stake will be **slashed** to the DAO **(DAO settles)**
 
 7. In order to avoid the truth being manipulated by the DAO there is an external party in facts i.e. the Council to override DAO's decision and slash the DAO's $HYPE if needed **(Council reviews)**
 

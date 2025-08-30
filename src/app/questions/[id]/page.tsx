@@ -835,7 +835,18 @@ const AnswerForm = ({
                 No
               </button>
             </div>
+          ) : questionType === 1 ? (
+            // Number question - use number input
+            <input
+              type="number"
+              value={answer}
+              onChange={(e) => setAnswer(e.target.value)}
+              placeholder="Enter your answer..."
+              className="input-modern w-full"
+              required
+            />
           ) : (
+            // Open-ended question - use textarea
             <textarea
               value={answer}
               onChange={(e) => setAnswer(e.target.value)}
@@ -848,12 +859,12 @@ const AnswerForm = ({
         
         <div>
           <label className="block text-sm font-medium mb-2 theme-text-primary">
-            Sources <span className="text-sm text-gray-500">(will be saved to our database)</span>
+            Sources
           </label>
           <textarea
             value={sources}
             onChange={(e) => setSources(e.target.value)}
-            placeholder="Provide sources to support your answer..."
+            placeholder="Legitimate proofs to support your answer..."
             className="input-modern w-full h-24 resize-none"
             required
           />

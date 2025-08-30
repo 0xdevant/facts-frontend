@@ -121,7 +121,7 @@ function Header({ isDarkMode, onThemeChange }: { isDarkMode: boolean; onThemeCha
             )}
             <button
               onClick={() => setShowHowItWorksModal(true)}
-              className="theme-text-primary hover:text-cyan-500 transition-colors"
+              className="px-4 py-2 rounded-lg font-medium bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white shadow-md hover:shadow-lg transition-all duration-200 transform hover:scale-105"
             >
               How It Works
             </button>
@@ -207,7 +207,7 @@ function Header({ isDarkMode, onThemeChange }: { isDarkMode: boolean; onThemeCha
                 setShowHowItWorksModal(true);
                 setIsMobileMenuOpen(false);
               }}
-              className="block w-full text-left px-3 py-2 rounded-md text-base font-medium theme-text-primary hover:text-cyan-500 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+              className="block w-full text-left px-3 py-2 rounded-md text-base font-medium bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white shadow-md transition-all duration-200"
             >
               How It Works
             </button>
