@@ -111,8 +111,7 @@ export default function Home() {
               facts.hype
             </h1>
             <p className="text-xl max-w-2xl mx-auto leading-relaxed transition-colors duration-200 theme-text-secondary">
-              A decentralized, open-source market resolution system like UMA to provide crowd-sourced verification of real-world events on-chain.
-              Connect your wallet to participate, stake $HYPE to answer or vouch, and help build a trusted knowledge base.
+              A decentralized and actually fair market resolution system to provide crowd-sourced verification of real-world events for DApps to build on top of i.e. an open-source alternative to UMA on HyperLiquid.
             </p>
           </div>
         </div>
