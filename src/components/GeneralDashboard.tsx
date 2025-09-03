@@ -34,7 +34,7 @@ interface Answer {
 export default function GeneralDashboard() {
   const { address } = useAccount();
   const [isOwner, setIsOwner] = useState(false);
-  const [activeTab, setActiveTab] = useState<'overview' | 'platform'>('overview');
+  const [activeTab, setActiveTab] = useState<'withdraw' | 'claim' | 'platform'>('withdraw');
   const [showWithdrawForm, setShowWithdrawForm] = useState(false);
   const [selectedQuestions, setSelectedQuestions] = useState<string[]>([]);
   const [selectedAnswers, setSelectedAnswers] = useState<string[]>([]);
@@ -248,14 +248,24 @@ export default function GeneralDashboard() {
       <div className="card p-6">
         <div className="flex space-x-4 mb-6">
           <button
-            onClick={() => setActiveTab('overview')}
+            onClick={() => setActiveTab('withdraw')}
             className={`px-4 py-2 rounded-lg font-medium transition-all ${
-              activeTab === 'overview'
+              activeTab === 'withdraw'
                 ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-md'
                 : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
             }`}
           >
-            Funds
+            Withdraw
+          </button>
+          <button
+            onClick={() => setActiveTab('claim')}
+            className={`px-4 py-2 rounded-lg font-medium transition-all ${
+              activeTab === 'claim'
+                ? 'bg-gradient-to-r from-green-500 to-green-600 text-white shadow-md'
+                : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
+            }`}
+          >
+            Claim
           </button>
           {isOwner && (
             <button
@@ -263,7 +273,7 @@ export default function GeneralDashboard() {
               className={`px-4 py-2 rounded-lg font-medium transition-all ${
                 activeTab === 'platform'
                   ? 'bg-gradient-to-r from-purple-500 to-purple-600 text-white shadow-md'
-                  : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
+                  : 'bg-gray-200 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
               }`}
             >
               Platform Management
@@ -271,8 +281,8 @@ export default function GeneralDashboard() {
           )}
         </div>
 
-        {/* Funds Tab */}
-        {activeTab === 'overview' && (
+        {/* Withdraw Tab */}
+        {activeTab === 'withdraw' && (
           <div className="space-y-6">
             {/* Withdraw Section */}
             <div>
@@ -402,6 +412,24 @@ export default function GeneralDashboard() {
                   <p className="text-red-600 text-sm">{error}</p>
                 </div>
               )}
+            </div>
+          </div>
+        )}
+
+        {/* Claim Tab */}
+        {activeTab === 'claim' && (
+          <div className="space-y-6">
+            <div>
+              <h3 className="text-xl font-semibold mb-4 theme-text-primary">Claim Rewards</h3>
+              <p className="theme-text-secondary mb-4">
+                Claim your bounty rewards and platform fees.
+              </p>
+              
+              <div className="p-4 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-700">
+                <p className="text-sm text-green-700 dark:text-green-300">
+                  <strong>Coming Soon:</strong> Claim functionality will be available in a future update.
+                </p>
+              </div>
             </div>
           </div>
         )}

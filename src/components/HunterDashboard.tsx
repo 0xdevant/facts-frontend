@@ -33,6 +33,7 @@ interface Answer {
 
 export default function HunterDashboard() {
   const { address } = useAccount();
+  const [activeTab, setActiveTab] = useState<'withdraw' | 'claim'>('withdraw');
   const [showWithdrawForm, setShowWithdrawForm] = useState(false);
   const [selectedQuestions, setSelectedQuestions] = useState<string[]>([]);
   const [selectedAnswers, setSelectedAnswers] = useState<string[]>([]);
@@ -224,12 +225,37 @@ export default function HunterDashboard() {
         </div>
       </div>
 
-      {/* Withdraw Section */}
-      <div className="card p-6">
-        <h3 className="text-xl font-semibold mb-4 theme-text-primary">Withdraw Funds</h3>
-        <p className="theme-text-secondary mb-4">
-          Withdraw your staked amounts and vouched amounts from all questions.
-        </p>
+      {/* Tabs */}
+      <div className="flex space-x-4 mb-6">
+        <button
+          onClick={() => setActiveTab('withdraw')}
+          className={`px-4 py-2 rounded-lg font-medium transition-all ${
+            activeTab === 'withdraw'
+              ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-md'
+              : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
+          }`}
+        >
+          Withdraw
+        </button>
+        <button
+          onClick={() => setActiveTab('claim')}
+          className={`px-4 py-2 rounded-lg font-medium transition-all ${
+            activeTab === 'claim'
+              ? 'bg-gradient-to-r from-green-500 to-green-600 text-white shadow-md'
+              : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
+          }`}
+        >
+          Claim
+        </button>
+      </div>
+
+      {/* Withdraw Tab */}
+      {activeTab === 'withdraw' && (
+        <div>
+          <h3 className="text-xl font-semibold mb-4 theme-text-primary">Withdraw Funds</h3>
+          <p className="theme-text-secondary mb-4">
+            Withdraw your staked amounts and vouched amounts from all questions.
+          </p>
 
         {!showWithdrawForm ? (
           <button
@@ -352,7 +378,24 @@ export default function HunterDashboard() {
             <p className="text-red-600 text-sm">{error}</p>
           </div>
         )}
-      </div>
+        </div>
+      )}
+
+      {/* Claim Tab */}
+      {activeTab === 'claim' && (
+        <div>
+          <h3 className="text-xl font-semibold mb-4 theme-text-primary">Claim Rewards</h3>
+          <p className="theme-text-secondary mb-4">
+            Claim your bounty rewards and platform fees.
+          </p>
+          
+          <div className="p-4 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-700">
+            <p className="text-sm text-green-700 dark:text-green-300">
+              <strong>Coming Soon:</strong> Claim functionality will be available in a future update.
+            </p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
