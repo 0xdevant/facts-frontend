@@ -187,7 +187,7 @@ const QuestionCard = ({ question, challengePeriod }: { question: Question & { id
           <StatusBadge question={question} challengePeriod={challengePeriod} />
         </div>
         
-        <h3 className="text-lg font-semibold theme-text-primary mb-2 line-clamp-2">
+        <h3 className="text-lg font-semibold theme-text-primary mb-2 line-clamp-2 min-h-[3.5rem] flex items-start">
           {question.description}
         </h3>
         
