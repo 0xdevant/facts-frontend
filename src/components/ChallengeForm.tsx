@@ -81,7 +81,7 @@ export default function ChallengeForm({
           functionName: 'config',
         });
         
-        const challengeDepositAmount = (config as [{ requiredStakeForDAO: bigint; challengeDeposit: bigint; requiredStakeToHunt: bigint; minVouched: bigint; huntPeriod: bigint; challengePeriod: bigint; settlePeriod: bigint; reviewPeriod: bigint; }, unknown, unknown])[0].challengeDeposit;
+        const challengeDepositAmount = (config as readonly [{ minStakeOfNativeBountyToHuntBP: bigint; minStakeToSettleAsDAO: bigint; minVouched: bigint; challengeFee: bigint; huntPeriod: bigint; challengePeriod: bigint; settlePeriod: bigint; reviewPeriod: bigint; }, { hunterBP: bigint; voucherBP: bigint; }, { slashHunterBP: bigint; slashVoucherBP: bigint; slashDaoBP: bigint; daoOpFeeBP: bigint; }])[0].challengeFee;
         setChallengeDeposit(challengeDepositAmount);
       } catch (error) {
         console.error("Error fetching challenge data:", error);

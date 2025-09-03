@@ -1,8 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
 import { useAccount } from "wagmi";
-import { readContract } from "viem/actions";
-import { factsContractAddress, factsAbi, publicClient } from "@/lib/contract";
 
 interface HunterStatusProps {
   children: React.ReactNode;
@@ -28,31 +26,13 @@ export default function HunterStatus({ children, fallback }: HunterStatusProps) 
         setLoading(true);
         setError("");
 
-        // Get system config to check required stake
-        const systemConfig = await readContract(publicClient, {
-          address: factsContractAddress,
-          abi: factsAbi,
-          functionName: 'config',
-        });
+        // In the new contract, users don't need to register as hunters
+        // They stake HYPE directly when submitting answers
 
-        // Get user info to check deposited amount
-        const userInfo = await readContract(publicClient, {
-          address: factsContractAddress,
-          abi: factsAbi,
-          functionName: 'usersInfo',
-          args: [address as `0x${string}`],
-        });
-
-        
-        
-        // Extract required stake and user's deposited amount
-        const requiredStake = (systemConfig as [{ requiredStakeForDAO: bigint; challengeDeposit: bigint; requiredStakeToHunt: bigint; minVouched: bigint; huntPeriod: bigint; challengePeriod: bigint; settlePeriod: bigint; reviewPeriod: bigint; }, unknown, unknown])[0].requiredStakeToHunt;
-        const userDepositedAmount = userInfo as bigint;
-
-
-
-        // Check if user has deposited enough to be a hunter
-        setIsHunter(userDepositedAmount >= requiredStake);
+        // In the new contract, users don't need to register as hunters
+        // They stake HYPE directly when submitting answers
+        // For now, we'll show that everyone can be a hunter
+        setIsHunter(true);
         
       } catch (e) {
         console.error("Error checking hunter status:", e);

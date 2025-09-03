@@ -86,9 +86,9 @@ export default function AdminPage() {
         const [systemConfigData, distributionConfigData, challengeConfigData] = config;
 
         setSystemConfig({
-          requiredStakeForDAO: formatEther(systemConfigData.requiredStakeForDAO),
-          challengeDeposit: formatEther(systemConfigData.challengeDeposit),
-          requiredStakeToHunt: formatEther(systemConfigData.requiredStakeToHunt),
+          requiredStakeForDAO: formatEther(systemConfigData.minStakeToSettleAsDAO),
+          challengeDeposit: formatEther(systemConfigData.challengeFee),
+          requiredStakeToHunt: formatEther(systemConfigData.minStakeOfNativeBountyToHuntBP),
           minVouched: formatEther(systemConfigData.minVouched),
           huntPeriod: systemConfigData.huntPeriod.toString(),
           challengePeriod: systemConfigData.challengePeriod.toString(),
@@ -139,16 +139,16 @@ export default function AdminPage() {
     setSuccessMessage("");
 
     try {
-      const newSystemConfig = {
-        requiredStakeForDAO: parseEther(systemConfig.requiredStakeForDAO),
-        challengeDeposit: parseEther(systemConfig.challengeDeposit),
-        requiredStakeToHunt: parseEther(systemConfig.requiredStakeToHunt),
-        minVouched: parseEther(systemConfig.minVouched),
-        huntPeriod: BigInt(systemConfig.huntPeriod),
-        challengePeriod: BigInt(systemConfig.challengePeriod),
-        settlePeriod: BigInt(systemConfig.settlePeriod),
-        reviewPeriod: BigInt(systemConfig.reviewPeriod)
-      };
+              const newSystemConfig = {
+          minStakeOfNativeBountyToHuntBP: parseEther(systemConfig.requiredStakeToHunt),
+          minStakeToSettleAsDAO: parseEther(systemConfig.requiredStakeForDAO),
+          minVouched: parseEther(systemConfig.minVouched),
+          challengeFee: parseEther(systemConfig.challengeDeposit),
+          huntPeriod: BigInt(systemConfig.huntPeriod),
+          challengePeriod: BigInt(systemConfig.challengePeriod),
+          settlePeriod: BigInt(systemConfig.settlePeriod),
+          reviewPeriod: BigInt(systemConfig.reviewPeriod)
+        };
 
       writeContract({
         address: factsContractAddress as `0x${string}`,

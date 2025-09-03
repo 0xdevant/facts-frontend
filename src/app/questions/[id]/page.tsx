@@ -430,7 +430,7 @@ const InfoCard = ({
 );
 
 // Period calculation functions
-const calculatePeriods = (question: Question & { id: number }, config: [{ requiredStakeForDAO: bigint; challengeDeposit: bigint; requiredStakeToHunt: bigint; minVouched: bigint; huntPeriod: bigint; challengePeriod: bigint; settlePeriod: bigint; reviewPeriod: bigint; }, unknown, unknown]) => {
+const calculatePeriods = (question: Question & { id: number }, config: readonly [{ minStakeOfNativeBountyToHuntBP: bigint; minStakeToSettleAsDAO: bigint; minVouched: bigint; challengeFee: bigint; huntPeriod: bigint; challengePeriod: bigint; settlePeriod: bigint; reviewPeriod: bigint; }, { hunterBP: bigint; voucherBP: bigint; }, { slashHunterBP: bigint; slashVoucherBP: bigint; slashDaoBP: bigint; daoOpFeeBP: bigint; }]) => {
   const startHuntAt = Number(question.slotData.startHuntAt);
   const endHuntAt = Number(question.slotData.endHuntAt);
   const challengePeriod = Number(config[0].challengePeriod);
@@ -458,7 +458,7 @@ const calculatePeriods = (question: Question & { id: number }, config: [{ requir
 };
 
 const PeriodInfoTooltip = ({ question, mostVouchedAnsId }: { question: Question & { id: number }; mostVouchedAnsId: number }) => {
-  const [config, setConfig] = useState<[{ requiredStakeForDAO: bigint; challengeDeposit: bigint; requiredStakeToHunt: bigint; minVouched: bigint; huntPeriod: bigint; challengePeriod: bigint; settlePeriod: bigint; reviewPeriod: bigint; }, unknown, unknown] | null>(null);
+  const [config, setConfig] = useState<readonly [{ minStakeOfNativeBountyToHuntBP: bigint; minStakeToSettleAsDAO: bigint; minVouched: bigint; challengeFee: bigint; huntPeriod: bigint; challengePeriod: bigint; settlePeriod: bigint; reviewPeriod: bigint; }, { hunterBP: bigint; voucherBP: bigint; }, { slashHunterBP: bigint; slashVoucherBP: bigint; slashDaoBP: bigint; daoOpFeeBP: bigint; }] | null>(null);
   const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
@@ -470,7 +470,7 @@ const PeriodInfoTooltip = ({ question, mostVouchedAnsId }: { question: Question 
           functionName: 'config',
           args: [],
         });
-        setConfig(configData as [{ requiredStakeForDAO: bigint; challengeDeposit: bigint; requiredStakeToHunt: bigint; minVouched: bigint; huntPeriod: bigint; challengePeriod: bigint; settlePeriod: bigint; reviewPeriod: bigint; }, unknown, unknown]);
+        setConfig(configData);
       } catch (error) {
         console.error('Error fetching config:', error);
       }
@@ -555,7 +555,6 @@ const QuestionDetails = ({
   rules, 
   isDAO,
   isInSettlePeriod, 
-  questionChallenged, 
   isAfterChallengePeriod,
   isAfterReviewPeriod,
   isWithinReviewPeriod,
@@ -571,7 +570,6 @@ const QuestionDetails = ({
   rules: string | null;
   isDAO: boolean;
   isInSettlePeriod: boolean;
-  questionChallenged: boolean;
   isAfterChallengePeriod: boolean;
   isAfterReviewPeriod: boolean;
   isWithinReviewPeriod: boolean;
@@ -579,6 +577,7 @@ const QuestionDetails = ({
   mostVouchedAnsId: number;
   challengePeriod: number;
   daoFee: bigint;
+
   onSettleClick: () => void;
   onOverrideSettle: () => void;
   onFinalize: () => void;
@@ -770,6 +769,30 @@ const AnswerForm = ({
   const [sources, setSources] = useState("");
   const [backendError, setBackendError] = useState("");
   const [backendLoading, setBackendLoading] = useState(false);
+  const [requiredStake, setRequiredStake] = useState<bigint>(BigInt(0));
+  const [stakeLoading, setStakeLoading] = useState(true);
+
+  // Fetch required stake for this question
+  useEffect(() => {
+    const fetchRequiredStake = async () => {
+      try {
+        setStakeLoading(true);
+        const stake = await readContract(publicClient, {
+          address: factsContractAddress,
+          abi: factsAbi,
+          functionName: 'calcMinStakeToHunt',
+          args: [BigInt(questionId)],
+        });
+        setRequiredStake(stake);
+      } catch (error) {
+        console.error("Error fetching required stake:", error);
+      } finally {
+        setStakeLoading(false);
+      }
+    };
+
+    fetchRequiredStake();
+  }, [questionId]);
 
   const handleSubmit = async () => {
     if (!answer.trim() || !sources.trim()) {
@@ -790,6 +813,27 @@ const AnswerForm = ({
   return (
     <div className="card p-8 mb-8">
       <h2 className="text-2xl font-bold mb-6 theme-text-primary">Submit Answer</h2>
+      
+      {/* Required Stake Information */}
+      <div className="mb-6 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-lg">
+        <div className="flex items-center justify-between">
+          <div>
+            <h4 className="font-medium text-blue-900 dark:text-blue-100 mb-1">Required HYPE Stake</h4>
+            <p className="text-sm text-blue-800 dark:text-blue-200">
+              To submit an answer, you need to stake HYPE tokens relative to this question&apos;s bounty.
+            </p>
+          </div>
+          <div className="text-right">
+            {stakeLoading ? (
+              <div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+            ) : (
+              <div className="text-2xl font-bold text-blue-900 dark:text-blue-100">
+                {formatEther(requiredStake)} HYPE
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
       
       {(error || backendError) && (
         <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
@@ -1166,6 +1210,7 @@ export default function QuestionDetailPage() {
   const [settleSuccess, setSettleSuccess] = useState(false);
   const [finalizeSuccess, setFinalizeSuccess] = useState(false);
   const [isDAO, setIsDAO] = useState(false);
+  const [contractOwner, setContractOwner] = useState<string | null>(null);
   const [challengePeriod, setChallengePeriod] = useState<number>(0);
   const [daoFee, setDaoFee] = useState<bigint>(BigInt(0));
   const [showSettleModal, setShowSettleModal] = useState(false);
@@ -1214,9 +1259,9 @@ export default function QuestionDetailPage() {
           setRules(null);
         }
         
-        // Check challenge, settle, and review period status, owner, DAO status, and platform fees
+        // Check challenge, settle, and review period status, and get config
         try {
-          const [inChallengePeriod, afterChallengePeriod, inSettlePeriod, afterReviewPeriod, withinReviewPeriod, afterHuntPeriod, mostVouchedAnsId, contractOwner, configData, daoStatus, platformFeesData] = await Promise.all([
+          const [inChallengePeriod, afterChallengePeriod, inSettlePeriod, afterReviewPeriod, withinReviewPeriod, afterHuntPeriod, mostVouchedAnsId, contractOwner, configData] = await Promise.all([
             readContract(publicClient, {
               address: factsContractAddress,
               abi: factsAbi,
@@ -1270,18 +1315,6 @@ export default function QuestionDetailPage() {
               abi: factsAbi,
               functionName: 'config',
               args: [],
-            }),
-            address ? readContract(publicClient, {
-              address: factsContractAddress,
-              abi: factsAbi,
-              functionName: 'isDAO',
-              args: [address as `0x${string}`],
-            }) : Promise.resolve(false),
-            readContract(publicClient, {
-              address: factsContractAddress,
-              abi: factsAbi,
-              functionName: 'platformFees',
-              args: [BigInt(questionId)],
             })
           ]);
           setIsInChallengePeriod(inChallengePeriod as boolean);
@@ -1291,14 +1324,23 @@ export default function QuestionDetailPage() {
           setIsWithinReviewPeriod(withinReviewPeriod as boolean);
           setIsAfterHuntPeriod(afterHuntPeriod as boolean);
           setMostVouchedAnsId(Number(mostVouchedAnsId));
-          setIsDAO(daoStatus as boolean);
+          setContractOwner(contractOwner as string);
           
-          // Extract challenge period from config and DAO fee from platform fees
+          // Check if user can act as DAO based on contract ownership
+          let canActAsDAO = false;
+          if (address && contractOwner) {
+            // Check if user is the contract owner
+            const isContractOwner = address.toLowerCase() === contractOwner.toLowerCase();
+            canActAsDAO = isContractOwner;
+          }
+          setIsDAO(canActAsDAO);
+          
+          // Extract challenge period from config
           const systemConfig = configData[0];
           setChallengePeriod(Number(systemConfig.challengePeriod));
-          setDaoFee((platformFeesData as readonly [bigint, bigint])[1]); // daoFee is the second element
+          setDaoFee(BigInt(0)); // Placeholder - DAO fees are now handled differently
         } catch (error) {
-          console.error("Error checking periods and DAO status:", error);
+          console.error("Error checking periods and config:", error);
           setIsInChallengePeriod(false);
           setIsAfterChallengePeriod(false);
           setIsInSettlePeriod(false);
@@ -1477,6 +1519,14 @@ export default function QuestionDetailPage() {
     setError("");
     
     try {
+      // Calculate the required HYPE stake for this question
+      const requiredStake = await readContract(publicClient, {
+        address: factsContractAddress,
+        abi: factsAbi,
+        functionName: 'calcMinStakeToHunt',
+        args: [BigInt(questionId)],
+      });
+
       // Store the sources for later saving with real answer ID
       setPendingSources({ answer: answer.trim(), sources });
       
@@ -1515,6 +1565,7 @@ export default function QuestionDetailPage() {
         abi: factsAbi,
         functionName: 'submit',
         args: [BigInt(questionId), encodedAnswer],
+        value: requiredStake, // Include the required HYPE stake
       });
       
     } catch (e) {
@@ -1563,25 +1614,22 @@ export default function QuestionDetailPage() {
     setChallengeSuccess(true); // Set flag to trigger success handling
   };
 
-  const handleSettleClick = () => {
-    // Set loading immediately when button is clicked
-    setLoading(true);
-    
-    if (!isDAO) {
-      // Non-DAO members call settle function directly without modal
-      handleSettleDirect();
+  const handleSettleClick = async () => {
+    if (!address) {
+      setError('Please connect your wallet first');
       return;
     }
     
-    // If DAO member and no challenge is involved, call settle directly
-    if (isAfterChallengePeriod && !question?.slotData.challenged) {
-      handleSettleDirect();
+    // Check if user is the contract owner
+    if (address.toLowerCase() === contractOwner?.toLowerCase()) {
+      // Owner users call settle with three arguments and show modal
+      // Stake requirement will be checked by the contract when settle is called
+      setShowSettleModal(true);
       return;
     }
     
-    // If DAO member and challenge is involved, show modal
-    setLoading(false); // Reset loading since we're showing modal
-    setShowSettleModal(true);
+    // Non-owner users call settle function directly with one argument
+    handleSettleDirect();
   };
 
   const handleSettleDirect = async () => {
@@ -1598,35 +1646,12 @@ export default function QuestionDetailPage() {
     transactionAddressRef.current = address;
     
     try {
-      let answerId = 0;
-      const challengeSucceeded = false;
-      
-      // If DAO member and no challenge involved, use the most vouched answer
-      if (isDAO && isAfterChallengePeriod && !question?.slotData.challenged) {
-        try {
-          const mostVouchedAnsId = await readContract(publicClient, {
-            address: factsContractAddress,
-            abi: factsAbi,
-            functionName: 'getMostVouchedAnsId',
-            args: [BigInt(questionId)],
-          });
-          answerId = Number(mostVouchedAnsId);
-        } catch (error) {
-          console.error("Error getting most vouched answer:", error);
-          // Fallback to first answer if contract call fails
-          answerId = 0;
-        }
-      }
-      
+      // Non-owner users call settle with only one argument
       writeContract({
         address: factsContractAddress as `0x${string}`,
         abi: factsAbi,
         functionName: 'settle',
-        args: [
-          BigInt(questionId),
-          answerId,
-          challengeSucceeded
-        ],
+        args: [BigInt(questionId)],
       });
     } catch (e) {
       console.error("Error settling question:", e);
@@ -1637,7 +1662,7 @@ export default function QuestionDetailPage() {
     }
   };
 
-  const handleSettle = (selectedAnswerId: number, challengeSucceeded: boolean) => {
+  const handleSettle = async (selectedAnswerId: number, challengeSucceeded: boolean) => {
     if (!isConnected || !address) {
       setError('Please connect your wallet first');
       return;
@@ -1651,6 +1676,17 @@ export default function QuestionDetailPage() {
     transactionAddressRef.current = address;
     
     try {
+      // Get the required DAO stake amount
+      const configData = await readContract(publicClient, {
+        address: factsContractAddress,
+        abi: factsAbi,
+        functionName: 'config',
+        args: [],
+      });
+      
+      const systemConfig = configData[0];
+      const requiredDAOStake = systemConfig.minStakeToSettleAsDAO;
+      
       writeContract({
         address: factsContractAddress as `0x${string}`,
         abi: factsAbi,
@@ -1660,6 +1696,7 @@ export default function QuestionDetailPage() {
           selectedAnswerId,
           challengeSucceeded
         ],
+        value: requiredDAOStake, // Pass the required DAO stake as msg.value
       });
     } catch (e) {
       console.error("Error settling question:", e);
@@ -1671,7 +1708,7 @@ export default function QuestionDetailPage() {
   };
 
   const handleOverrideSettle = () => {
-    // Show the override settle modal instead of calling contract directly
+    // Show the override settle modal for council/DAO override settlement
     setShowOverrideSettleModal(true);
   };
 
@@ -1689,14 +1726,14 @@ export default function QuestionDetailPage() {
     transactionAddressRef.current = address;
     
     try {
+      // Council calls overrideSettlement function (no stake requirement)
       writeContract({
         address: factsContractAddress as `0x${string}`,
         abi: factsAbi,
-        functionName: 'settle',
+        functionName: 'overrideSettlement',
         args: [
           BigInt(questionId),
-          selectedAnswerId,
-          false // challengeSucceeded = false for override
+          selectedAnswerId
         ],
       });
     } catch (e) {
@@ -1707,6 +1744,8 @@ export default function QuestionDetailPage() {
       setLoading(false);
     }
   };
+
+
 
   const handleFinalize = async () => {
     if (!isConnected || !address) {
@@ -1783,12 +1822,11 @@ export default function QuestionDetailPage() {
   return (
     <div className="min-h-screen theme-bg">
       <div className="max-w-4xl mx-auto px-4 py-8">
-        <QuestionDetails 
-          question={question} 
-          rules={rules} 
+                <QuestionDetails
+          question={question}
+          rules={rules}
           isDAO={isDAO}
           isInSettlePeriod={isInSettlePeriod}
-          questionChallenged={question.slotData.challenged}
           isAfterChallengePeriod={isAfterChallengePeriod}
           isAfterReviewPeriod={isAfterReviewPeriod}
           isWithinReviewPeriod={isWithinReviewPeriod}
@@ -1796,6 +1834,7 @@ export default function QuestionDetailPage() {
           mostVouchedAnsId={mostVouchedAnsId}
           challengePeriod={challengePeriod}
           daoFee={daoFee}
+
           onSettleClick={handleSettleClick}
           onOverrideSettle={handleOverrideSettle}
           onFinalize={handleFinalize}

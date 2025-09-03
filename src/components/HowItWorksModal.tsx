@@ -117,7 +117,7 @@ export default function HowItWorksModal({ isOpen, onClose }: HowItWorksModalProp
               </div>
               <div>
                 <p className={`${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                  Others can submit different answers after depositing $HYPE to be a hunter <span className={`font-semibold ${isDarkMode ? 'text-green-400' : 'text-green-600'}`}>(Hunter hunts)</span>
+                  Others can submit answers by depositing $HYPE as bond <span className={`font-semibold ${isDarkMode ? 'text-green-400' : 'text-green-600'}`}>(Hunter hunts)</span>
                 </p>
               </div>
             </div>
@@ -149,7 +149,7 @@ export default function HowItWorksModal({ isOpen, onClose }: HowItWorksModalProp
                   </div>
                   <div className={`p-3 rounded-lg ${isDarkMode ? 'bg-gray-700/50' : 'bg-gray-100'}`}>
                     <p className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
-                      <span className="font-semibold">Note 2:</span> If there is no submission, or no answer gets more vouched than the others, the result can be settled immediately and no bounty will be distributed
+                      <span className="font-semibold">Note 2:</span> If there is no submission, or no answer gets more vouched than the others, the result can be settled immediately and bounty will be returned to the truth-seeker
                     </p>
                   </div>
                 </div>

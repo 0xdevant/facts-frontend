@@ -1,7 +1,6 @@
 "use client";
 
 import { useAccount } from "wagmi";
-
 import GeneralDashboard from "@/components/GeneralDashboard";
 
 export default function DashboardPage() {
@@ -10,7 +9,7 @@ export default function DashboardPage() {
   if (!isConnected) {
     return (
       <div className="min-h-screen theme-bg">
-        <div className="max-w-4xl mx-auto px-4 py-8">
+        <div className="max-w-6xl mx-auto px-4 py-8">
           <div className="card p-8 text-center">
             <h1 className="text-2xl font-bold mb-4 theme-text-primary">Dashboard</h1>
             <p className="theme-text-secondary mb-6">
@@ -24,16 +23,7 @@ export default function DashboardPage() {
 
   return (
     <div className="min-h-screen theme-bg">
-      <div className="max-w-4xl mx-auto px-4 py-8">
-        {/* Header */}
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold mb-4 theme-text-primary">Dashboard</h1>
-          <p className="theme-text-secondary text-lg">
-            Manage your hunter status, deposits, and claim your rewards and fees.
-          </p>
-        </div>
-
-        {/* Dashboard */}
+      <div className="max-w-6xl mx-auto px-4 py-8">
         <GeneralDashboard />
 
         {/* Information Section */}
@@ -91,72 +81,6 @@ export default function DashboardPage() {
               <p className="text-sm theme-text-secondary">
                 Claim bounty rewards or platform fees if you are the owner.
               </p>
-            </div>
-          </div>
-        </div>
-
-        {/* How It Works */}
-        <div className="mt-8 card p-6">
-          <h2 className="text-xl font-semibold mb-4 theme-text-primary">How It Works</h2>
-          <div className="space-y-4">
-            <div className="flex items-start space-x-4">
-              <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
-                <span className="text-sm font-semibold text-blue-600">1</span>
-              </div>
-              <div>
-                <h3 className="font-medium theme-text-primary">Register as Hunter</h3>
-                <p className="text-sm theme-text-secondary">
-                  Deposit HYPE tokens to become a registered hunter. This amount will be locked in the contract and can be used for staking.
-                </p>
-              </div>
-            </div>
-            
-            <div className="flex items-start space-x-4">
-              <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
-                <span className="text-sm font-semibold text-green-600">2</span>
-              </div>
-              <div>
-                <h3 className="font-medium theme-text-primary">Participate in Questions</h3>
-                <p className="text-sm theme-text-secondary">
-                  Submit answers, vouch for correct answers, or challenge incorrect ones to earn rewards.
-                </p>
-              </div>
-            </div>
-            
-            <div className="flex items-start space-x-4">
-              <div className="w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center flex-shrink-0">
-                <span className="text-sm font-semibold text-orange-600">3</span>
-              </div>
-              <div>
-                <h3 className="font-medium theme-text-primary">Questions Get Finalized</h3>
-                <p className="text-sm theme-text-secondary">
-                  Once questions are settled, rewards are distributed based on accuracy and participation.
-                </p>
-              </div>
-            </div>
-            
-            <div className="flex items-start space-x-4">
-              <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center flex-shrink-0">
-                <span className="text-sm font-semibold text-purple-600">4</span>
-              </div>
-              <div>
-                <h3 className="font-medium theme-text-primary">Claim Your Rewards</h3>
-                <p className="text-sm theme-text-secondary">
-                  Claim bounty rewards for correct answers and protocol fees if you&apos;re the contract owner.
-                </p>
-              </div>
-            </div>
-            
-            <div className="flex items-start space-x-4">
-              <div className="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center flex-shrink-0">
-                <span className="text-sm font-semibold text-red-600">5</span>
-              </div>
-              <div>
-                <h3 className="font-medium theme-text-primary">Redeem Your Principal</h3>
-                <p className="text-sm theme-text-secondary">
-                  Redeem your vouched stake from answers that didn&apos;t win or were challenged to recover your principal.
-                </p>
-              </div>
             </div>
           </div>
         </div>

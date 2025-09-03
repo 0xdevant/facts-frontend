@@ -13,22 +13,22 @@ export const factsAbi = [
             internalType: "struct SystemConfig",
             components: [
               {
-                name: "requiredStakeForDAO",
+                name: "minStakeOfNativeBountyToHuntBP",
                 type: "uint128",
                 internalType: "uint128",
               },
               {
-                name: "challengeDeposit",
-                type: "uint128",
-                internalType: "uint128",
-              },
-              {
-                name: "requiredStakeToHunt",
+                name: "minStakeToSettleAsDAO",
                 type: "uint128",
                 internalType: "uint128",
               },
               {
                 name: "minVouched",
+                type: "uint128",
+                internalType: "uint128",
+              },
+              {
+                name: "challengeFee",
                 type: "uint128",
                 internalType: "uint128",
               },
@@ -112,6 +112,10 @@ export const factsAbi = [
       },
     ],
     stateMutability: "nonpayable",
+  },
+  {
+    type: "receive",
+    stateMutability: "payable",
   },
   {
     type: "function",
@@ -241,8 +245,8 @@ export const factsAbi = [
       },
       {
         name: "bountyAmount",
-        type: "uint256",
-        internalType: "uint256",
+        type: "uint96",
+        internalType: "uint96",
       },
       {
         name: "startHuntAt",
@@ -257,6 +261,25 @@ export const factsAbi = [
     ],
     outputs: [],
     stateMutability: "payable",
+  },
+  {
+    type: "function",
+    name: "calcMinStakeToHunt",
+    inputs: [
+      {
+        name: "questionId",
+        type: "uint256",
+        internalType: "uint256",
+      },
+    ],
+    outputs: [
+      {
+        name: "",
+        type: "uint256",
+        internalType: "uint256",
+      },
+    ],
+    stateMutability: "view",
   },
   {
     type: "function",
@@ -387,22 +410,22 @@ export const factsAbi = [
         internalType: "struct SystemConfig",
         components: [
           {
-            name: "requiredStakeForDAO",
+            name: "minStakeOfNativeBountyToHuntBP",
             type: "uint128",
             internalType: "uint128",
           },
           {
-            name: "challengeDeposit",
-            type: "uint128",
-            internalType: "uint128",
-          },
-          {
-            name: "requiredStakeToHunt",
+            name: "minStakeToSettleAsDAO",
             type: "uint128",
             internalType: "uint128",
           },
           {
             name: "minVouched",
+            type: "uint128",
+            internalType: "uint128",
+          },
+          {
+            name: "challengeFee",
             type: "uint128",
             internalType: "uint128",
           },
@@ -474,13 +497,6 @@ export const factsAbi = [
       },
     ],
     stateMutability: "view",
-  },
-  {
-    type: "function",
-    name: "deposit",
-    inputs: [],
-    outputs: [],
-    stateMutability: "payable",
   },
   {
     type: "function",
@@ -623,26 +639,7 @@ export const factsAbi = [
   },
   {
     type: "function",
-    name: "getUserEngagingQIds",
-    inputs: [
-      {
-        name: "user",
-        type: "address",
-        internalType: "address",
-      },
-    ],
-    outputs: [
-      {
-        name: "",
-        type: "uint256[]",
-        internalType: "uint256[]",
-      },
-    ],
-    stateMutability: "view",
-  },
-  {
-    type: "function",
-    name: "getUserQuestionResult",
+    name: "getUserData",
     inputs: [
       {
         name: "user",
@@ -662,9 +659,14 @@ export const factsAbi = [
     ],
     outputs: [
       {
+        name: "deposited",
+        type: "uint128",
+        internalType: "uint128",
+      },
+      {
         name: "hunterClaimable",
-        type: "uint256",
-        internalType: "uint256",
+        type: "uint128",
+        internalType: "uint128",
       },
       {
         name: "vouched",
@@ -673,44 +675,6 @@ export const factsAbi = [
       },
       {
         name: "claimed",
-        type: "bool",
-        internalType: "bool",
-      },
-    ],
-    stateMutability: "view",
-  },
-  {
-    type: "function",
-    name: "isDAO",
-    inputs: [
-      {
-        name: "user",
-        type: "address",
-        internalType: "address",
-      },
-    ],
-    outputs: [
-      {
-        name: "",
-        type: "bool",
-        internalType: "bool",
-      },
-    ],
-    stateMutability: "view",
-  },
-  {
-    type: "function",
-    name: "isHunter",
-    inputs: [
-      {
-        name: "user",
-        type: "address",
-        internalType: "address",
-      },
-    ],
-    outputs: [
-      {
-        name: "",
         type: "bool",
         internalType: "bool",
       },
@@ -826,30 +790,6 @@ export const factsAbi = [
   },
   {
     type: "function",
-    name: "platformFees",
-    inputs: [
-      {
-        name: "questionId",
-        type: "uint256",
-        internalType: "uint256",
-      },
-    ],
-    outputs: [
-      {
-        name: "protocolFee",
-        type: "uint256",
-        internalType: "uint256",
-      },
-      {
-        name: "daoFee",
-        type: "uint256",
-        internalType: "uint256",
-      },
-    ],
-    stateMutability: "view",
-  },
-  {
-    type: "function",
     name: "qidToAnswers",
     inputs: [
       {
@@ -889,6 +829,30 @@ export const factsAbi = [
   },
   {
     type: "function",
+    name: "qidToFees",
+    inputs: [
+      {
+        name: "questionId",
+        type: "uint256",
+        internalType: "uint256",
+      },
+    ],
+    outputs: [
+      {
+        name: "protocolFee",
+        type: "uint128",
+        internalType: "uint128",
+      },
+      {
+        name: "daoFee",
+        type: "uint128",
+        internalType: "uint128",
+      },
+    ],
+    stateMutability: "view",
+  },
+  {
+    type: "function",
     name: "questions",
     inputs: [
       {
@@ -920,8 +884,8 @@ export const factsAbi = [
       },
       {
         name: "bountyAmount",
-        type: "uint256",
-        internalType: "uint256",
+        type: "uint96",
+        internalType: "uint96",
       },
       {
         name: "slotData",
@@ -975,39 +939,8 @@ export const factsAbi = [
   },
   {
     type: "function",
-    name: "redeem",
-    inputs: [
-      {
-        name: "questionId",
-        type: "uint256",
-        internalType: "uint256",
-      },
-      {
-        name: "answerId",
-        type: "uint16",
-        internalType: "uint16",
-      },
-    ],
-    outputs: [],
-    stateMutability: "nonpayable",
-  },
-  {
-    type: "function",
     name: "renounceOwnership",
     inputs: [],
-    outputs: [],
-    stateMutability: "nonpayable",
-  },
-  {
-    type: "function",
-    name: "reset",
-    inputs: [
-      {
-        name: "numOfIds",
-        type: "uint256",
-        internalType: "uint256",
-      },
-    ],
     outputs: [],
     stateMutability: "nonpayable",
   },
@@ -1081,22 +1014,22 @@ export const factsAbi = [
         internalType: "struct SystemConfig",
         components: [
           {
-            name: "requiredStakeForDAO",
+            name: "minStakeOfNativeBountyToHuntBP",
             type: "uint128",
             internalType: "uint128",
           },
           {
-            name: "challengeDeposit",
-            type: "uint128",
-            internalType: "uint128",
-          },
-          {
-            name: "requiredStakeToHunt",
+            name: "minStakeToSettleAsDAO",
             type: "uint128",
             internalType: "uint128",
           },
           {
             name: "minVouched",
+            type: "uint128",
+            internalType: "uint128",
+          },
+          {
+            name: "challengeFee",
             type: "uint128",
             internalType: "uint128",
           },
@@ -1147,6 +1080,19 @@ export const factsAbi = [
       },
     ],
     outputs: [],
+    stateMutability: "payable",
+  },
+  {
+    type: "function",
+    name: "settle",
+    inputs: [
+      {
+        name: "questionId",
+        type: "uint256",
+        internalType: "uint256",
+      },
+    ],
+    outputs: [],
     stateMutability: "nonpayable",
   },
   {
@@ -1171,7 +1117,7 @@ export const factsAbi = [
         internalType: "uint16",
       },
     ],
-    stateMutability: "nonpayable",
+    stateMutability: "payable",
   },
   {
     type: "function",
@@ -1195,12 +1141,22 @@ export const factsAbi = [
         type: "address",
         internalType: "address",
       },
+      {
+        name: "questionId",
+        type: "uint256",
+        internalType: "uint256",
+      },
     ],
     outputs: [
       {
         name: "deposited",
-        type: "uint256",
-        internalType: "uint256",
+        type: "uint128",
+        internalType: "uint128",
+      },
+      {
+        name: "hunterClaimable",
+        type: "uint128",
+        internalType: "uint128",
       },
     ],
     stateMutability: "view",
@@ -1227,6 +1183,16 @@ export const factsAbi = [
     type: "function",
     name: "withdraw",
     inputs: [
+      {
+        name: "questionIds",
+        type: "uint256[]",
+        internalType: "uint256[]",
+      },
+      {
+        name: "answerIds",
+        type: "uint16[]",
+        internalType: "uint16[]",
+      },
       {
         name: "recipient",
         type: "address",
@@ -1260,9 +1226,9 @@ export const factsAbi = [
       },
       {
         name: "bountyAmount",
-        type: "uint256",
+        type: "uint96",
         indexed: false,
-        internalType: "uint256",
+        internalType: "uint96",
       },
     ],
     anonymous: false,
@@ -1308,6 +1274,7 @@ export const factsAbi = [
         indexed: false,
         internalType: "address",
       },
+
       {
         name: "claimAmount",
         type: "uint256",
@@ -1326,25 +1293,6 @@ export const factsAbi = [
         type: "address",
         indexed: true,
         internalType: "address",
-      },
-    ],
-    anonymous: false,
-  },
-  {
-    type: "event",
-    name: "Deposited",
-    inputs: [
-      {
-        name: "user",
-        type: "address",
-        indexed: true,
-        internalType: "address",
-      },
-      {
-        name: "amount",
-        type: "uint256",
-        indexed: false,
-        internalType: "uint256",
       },
     ],
     anonymous: false,
@@ -1402,6 +1350,44 @@ export const factsAbi = [
   },
   {
     type: "event",
+    name: "Settle",
+    inputs: [
+      {
+        name: "questionId",
+        type: "uint256",
+        indexed: true,
+        internalType: "uint256",
+      },
+    ],
+    anonymous: false,
+  },
+  {
+    type: "event",
+    name: "SettleByDAO",
+    inputs: [
+      {
+        name: "questionId",
+        type: "uint256",
+        indexed: true,
+        internalType: "uint256",
+      },
+      {
+        name: "selectedAnswerId",
+        type: "uint16",
+        indexed: true,
+        internalType: "uint16",
+      },
+      {
+        name: "challengeSucceeded",
+        type: "bool",
+        indexed: false,
+        internalType: "bool",
+      },
+    ],
+    anonymous: false,
+  },
+  {
+    type: "event",
     name: "Submitted",
     inputs: [
       {
@@ -1412,9 +1398,9 @@ export const factsAbi = [
       },
       {
         name: "answerId",
-        type: "uint256",
+        type: "uint16",
         indexed: true,
-        internalType: "uint256",
+        internalType: "uint16",
       },
       {
         name: "hunter",
@@ -1437,9 +1423,9 @@ export const factsAbi = [
       },
       {
         name: "answerId",
-        type: "uint256",
+        type: "uint16",
         indexed: true,
-        internalType: "uint256",
+        internalType: "uint16",
       },
       {
         name: "vouchedBy",
@@ -1487,12 +1473,22 @@ export const factsAbi = [
   },
   {
     type: "error",
+    name: "ArrayMismatch",
+    inputs: [],
+  },
+  {
+    type: "error",
     name: "CannotChallengeSameAns",
     inputs: [],
   },
   {
     type: "error",
     name: "CannotChallengeSelf",
+    inputs: [],
+  },
+  {
+    type: "error",
+    name: "CannotDirectSettle",
     inputs: [],
   },
   {
@@ -1512,12 +1508,12 @@ export const factsAbi = [
   },
   {
     type: "error",
-    name: "EmptyOrRedeemedVouched",
+    name: "InsufficientBounty",
     inputs: [],
   },
   {
     type: "error",
-    name: "InsufficientBounty",
+    name: "InsufficientChallengeFee",
     inputs: [],
   },
   {
@@ -1553,7 +1549,22 @@ export const factsAbi = [
   },
   {
     type: "error",
+    name: "NoDirectTransfer",
+    inputs: [],
+  },
+  {
+    type: "error",
     name: "NotChallenged",
+    inputs: [],
+  },
+  {
+    type: "error",
+    name: "NotEligibleToHunt",
+    inputs: [],
+  },
+  {
+    type: "error",
+    name: "NotEligibleToSettleChallenge",
     inputs: [],
   },
   {
@@ -1603,22 +1614,7 @@ export const factsAbi = [
   },
   {
     type: "error",
-    name: "OnlyDAO",
-    inputs: [],
-  },
-  {
-    type: "error",
-    name: "OnlyHunter",
-    inputs: [],
-  },
-  {
-    type: "error",
     name: "OnlyOwnerOrFeeReceiver",
-    inputs: [],
-  },
-  {
-    type: "error",
-    name: "OnlyWhenNotEngaging",
     inputs: [],
   },
   {
@@ -1642,11 +1638,6 @@ export const factsAbi = [
         internalType: "address",
       },
     ],
-  },
-  {
-    type: "error",
-    name: "ResetOutOfBound",
-    inputs: [],
   },
   {
     type: "error",
