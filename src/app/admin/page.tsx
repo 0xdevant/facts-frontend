@@ -17,9 +17,9 @@ export default function AdminPage() {
 
   // System Config Form State
   const [systemConfig, setSystemConfig] = useState({
-    requiredStakeForDAO: "",
-    challengeDeposit: "",
-    requiredStakeToHunt: "",
+    minStakeToSettleAsDAO: "",
+    challengeFee: "",
+    minStakeOfNativeBountyToHuntBP: "5000",
     minVouched: "",
     huntPeriod: "",
     challengePeriod: "",
@@ -86,9 +86,9 @@ export default function AdminPage() {
         const [systemConfigData, distributionConfigData, challengeConfigData] = config;
 
         setSystemConfig({
-          requiredStakeForDAO: formatEther(systemConfigData.minStakeToSettleAsDAO),
-          challengeDeposit: formatEther(systemConfigData.challengeFee),
-          requiredStakeToHunt: formatEther(systemConfigData.minStakeOfNativeBountyToHuntBP),
+          minStakeToSettleAsDAO: formatEther(systemConfigData.minStakeToSettleAsDAO),
+          challengeFee: formatEther(systemConfigData.challengeFee),
+          minStakeOfNativeBountyToHuntBP: systemConfigData.minStakeOfNativeBountyToHuntBP.toString(),
           minVouched: formatEther(systemConfigData.minVouched),
           huntPeriod: systemConfigData.huntPeriod.toString(),
           challengePeriod: systemConfigData.challengePeriod.toString(),
@@ -140,10 +140,10 @@ export default function AdminPage() {
 
     try {
               const newSystemConfig = {
-          minStakeOfNativeBountyToHuntBP: parseEther(systemConfig.requiredStakeToHunt),
-          minStakeToSettleAsDAO: parseEther(systemConfig.requiredStakeForDAO),
+          minStakeOfNativeBountyToHuntBP: BigInt(systemConfig.minStakeOfNativeBountyToHuntBP),
+          minStakeToSettleAsDAO: parseEther(systemConfig.minStakeToSettleAsDAO),
           minVouched: parseEther(systemConfig.minVouched),
-          challengeFee: parseEther(systemConfig.challengeDeposit),
+          challengeFee: parseEther(systemConfig.challengeFee),
           huntPeriod: BigInt(systemConfig.huntPeriod),
           challengePeriod: BigInt(systemConfig.challengePeriod),
           settlePeriod: BigInt(systemConfig.settlePeriod),
@@ -297,37 +297,39 @@ export default function AdminPage() {
             <form onSubmit={handleSetSystemConfig} className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium mb-2 theme-text-primary">Required Stake for DAO (HYPE)</label>
+                  <label className="block text-sm font-medium mb-2 theme-text-primary">Min Stake to Settle as DAO (HYPE)</label>
                   <input
                     type="number"
                     step="0.000001"
-                    value={systemConfig.requiredStakeForDAO}
-                    onChange={(e) => setSystemConfig({...systemConfig, requiredStakeForDAO: e.target.value})}
+                    value={systemConfig.minStakeToSettleAsDAO}
+                    onChange={(e) => setSystemConfig({...systemConfig, minStakeToSettleAsDAO: e.target.value})}
                     className="input-modern w-full"
                     required
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-2 theme-text-primary">Challenge Deposit (HYPE)</label>
+                  <label className="block text-sm font-medium mb-2 theme-text-primary">Challenge Fee (HYPE)</label>
                   <input
                     type="number"
                     step="0.000001"
-                    value={systemConfig.challengeDeposit}
-                    onChange={(e) => setSystemConfig({...systemConfig, challengeDeposit: e.target.value})}
+                    value={systemConfig.challengeFee}
+                    onChange={(e) => setSystemConfig({...systemConfig, challengeFee: e.target.value})}
                     className="input-modern w-full"
                     required
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-2 theme-text-primary">Required Stake to Hunt (HYPE)</label>
+                  <label className="block text-sm font-medium mb-2 theme-text-primary">Min Stake of Native Bounty to Hunt (Basis Points)</label>
                   <input
                     type="number"
-                    step="0.000001"
-                    value={systemConfig.requiredStakeToHunt}
-                    onChange={(e) => setSystemConfig({...systemConfig, requiredStakeToHunt: e.target.value})}
+                    step="1"
+                    min="0"
+                    value={systemConfig.minStakeOfNativeBountyToHuntBP}
+                    onChange={(e) => setSystemConfig({...systemConfig, minStakeOfNativeBountyToHuntBP: e.target.value})}
                     className="input-modern w-full"
                     required
                   />
+                  <p className="text-xs text-gray-500 mt-1">100 BP = 1%. Example: 5000 BP = 50% of bounty amount</p>
                 </div>
                 <div>
                   <label className="block text-sm font-medium mb-2 theme-text-primary">Minimum Vouched (HYPE)</label>

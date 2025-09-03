@@ -43,6 +43,7 @@ export default function DashboardPage() {
   const [error, setError] = useState("");
   const [questions, setQuestions] = useState<Question[]>([]);
   const [questionAnswers, setQuestionAnswers] = useState<Map<number, Answer[]>>(new Map());
+  const [userData, setUserData] = useState<Map<number, readonly [bigint, bigint, bigint, boolean]>>(new Map());
 
   const { writeContract, isPending, data: hash } = useWriteContract();
   const { isLoading: isConfirming } = useWaitForTransactionReceipt({ hash });
@@ -146,6 +147,27 @@ export default function DashboardPage() {
       }
       setQuestionAnswers(answersMap);
       
+      // Fetch user data for finalized questions
+      if (address) {
+        const userDataMap = new Map<number, readonly [bigint, bigint, bigint, boolean]>();
+        for (const question of validQuestions) {
+          if (question.slotData.finalized) {
+            try {
+              const userDataResult = await readContract(publicClient, {
+                address: factsContractAddress,
+                abi: factsAbi,
+                functionName: 'getUserData',
+                args: [address, BigInt(question.id), question.slotData.answerId],
+              });
+              userDataMap.set(question.id, userDataResult);
+            } catch (error) {
+              console.error(`Error fetching user data for question ${question.id}:`, error);
+            }
+          }
+        }
+        setUserData(userDataMap);
+      }
+      
     } catch (error) {
       console.error("Error fetching questions:", error);
     }
@@ -194,6 +216,12 @@ export default function DashboardPage() {
     } catch (error) {
       setError(error instanceof Error ? error.message : "Failed to withdraw");
     }
+  };
+
+  const formatBountyAmount = (amount: bigint): string => {
+    if (amount === BigInt(0)) return 'No bounty';
+    const inEther = Number(amount) / Math.pow(10, 18);
+    return `${inEther.toFixed(2)} HYPE`;
   };
 
   const getQuestionDisplayText = (question: Question) => {
@@ -274,58 +302,103 @@ export default function DashboardPage() {
 
         {/* Tabs */}
         <div className="card p-6 mb-6">
-          <div className="flex space-x-4 mb-6">
-            <button
-              onClick={() => setActiveTab('withdraw')}
-              className={`px-4 py-2 rounded-lg font-medium transition-all ${
-                activeTab === 'withdraw'
-                  ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-md'
-                  : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
-              }`}
-            >
-              Withdraw
-            </button>
-            <button
-              onClick={() => setActiveTab('claim')}
-              className={`px-4 py-2 rounded-lg font-medium transition-all ${
-                activeTab === 'claim'
-                  ? 'bg-gradient-to-r from-green-500 to-green-600 text-white shadow-md'
-                  : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
-              }`}
-            >
-              Claim
-            </button>
+          <div className="flex items-center justify-center mb-8">
+            <div className="flex bg-gray-100 dark:bg-gray-800 rounded-xl p-1 shadow-inner">
+              <button
+                onClick={() => setActiveTab('withdraw')}
+                className={`relative px-8 py-3 rounded-lg font-semibold text-sm transition-all duration-300 ease-in-out ${
+                  activeTab === 'withdraw'
+                    ? 'text-blue-700 dark:text-blue-300 bg-white dark:bg-gray-700 shadow-md transform scale-105'
+                    : 'text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700/50'
+                }`}
+              >
+                <div className="flex items-center space-x-2">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                  </svg>
+                  <span>Withdraw</span>
+                </div>
+                {activeTab === 'withdraw' && (
+                  <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-2 h-2 bg-blue-500 rounded-full"></div>
+                )}
+              </button>
+              
+              <div className="w-2"></div>
+              
+              <button
+                onClick={() => setActiveTab('claim')}
+                className={`relative px-8 py-3 rounded-lg font-semibold text-sm transition-all duration-300 ease-in-out ${
+                  activeTab === 'claim'
+                    ? 'text-green-700 dark:text-green-300 bg-white dark:bg-gray-700 shadow-md transform scale-105'
+                    : 'text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700/50'
+                }`}
+              >
+                <div className="flex items-center space-x-2">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <span>Claim</span>
+                </div>
+                {activeTab === 'claim' && (
+                  <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-2 h-2 bg-green-500 rounded-full"></div>
+                )}
+              </button>
+            </div>
           </div>
 
           {/* Withdraw Tab */}
           {activeTab === 'withdraw' && (
-            <div className="space-y-6">
-              <div>
-                <h3 className="text-xl font-semibold mb-4 theme-text-primary">Withdraw Funds</h3>
-                <p className="theme-text-secondary mb-4">
-                  Withdraw your staked amounts and vouched amounts from all questions.
-                </p>
-
-                {!showWithdrawForm ? (
+            <div className="max-w-2xl mx-auto">
+              {!showWithdrawForm ? (
+                <div className="text-center">
+                  <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-blue-100 to-blue-200 dark:from-blue-900/30 dark:to-blue-800/30 rounded-full mb-6">
+                    <svg className="w-10 h-10 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                    </svg>
+                  </div>
+                  <h3 className="text-2xl font-bold mb-3 theme-text-primary">Withdraw Your Funds</h3>
+                  <p className="theme-text-secondary mb-8 max-w-md mx-auto">
+                    Withdraw your staked amounts and vouched amounts from questions you&apos;ve participated in.
+                  </p>
                   <button
                     onClick={() => setShowWithdrawForm(true)}
-                    className="button-primary"
+                    className="px-8 py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg font-semibold hover:from-blue-600 to-blue-700 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
                   >
-                    Withdraw Funds
+                    Start Withdrawal
                   </button>
-                ) : (
-                  <form onSubmit={handleWithdraw} className="space-y-4">
-                    <div className="p-4 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg border border-yellow-200 dark:border-yellow-700">
-                      <p className="text-sm text-yellow-700 dark:text-yellow-300">
-                        <strong>Important:</strong> You can only withdraw either staked OR vouched amounts - not both. 
-                        When selecting answer IDs, ensure they correspond to the selected question IDs.
-                      </p>
+                </div>
+              ) : (
+                <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg border border-gray-100 dark:border-gray-700">
+                  <div className="flex items-center justify-between mb-6">
+                    <h3 className="text-xl font-semibold theme-text-primary">Withdrawal Form</h3>
+                    <button
+                      onClick={() => setShowWithdrawForm(false)}
+                      className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+                    >
+                      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  </div>
+
+                  <form onSubmit={handleWithdraw} className="space-y-5">
+                    <div className="p-4 bg-amber-50 dark:bg-amber-900/20 rounded-lg border border-amber-200 dark:border-amber-700">
+                      <div className="flex items-start space-x-3">
+                        <svg className="w-5 h-5 text-amber-600 dark:text-amber-400 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                        </svg>
+                        <div>
+                          <p className="text-sm font-medium text-amber-800 dark:text-amber-200 mb-1">Important Note</p>
+                          <p className="text-sm text-amber-700 dark:text-amber-300">
+                            You can only withdraw either staked OR vouched amounts - not both. Ensure answer IDs correspond to selected question IDs.
+                          </p>
+                        </div>
+                      </div>
                     </div>
                     
-                    {/* Question Selection */}
                     <div>
                       <label className="block text-sm font-medium mb-2 theme-text-primary">
-                        Select Questions (optional)
+                        Questions
                       </label>
                       <select
                         multiple
@@ -333,27 +406,23 @@ export default function DashboardPage() {
                         onChange={(e) => {
                           const selected = Array.from(e.target.selectedOptions, option => option.value);
                           setSelectedQuestions(selected);
-                          // Clear answers when questions change to avoid mismatches
                           setSelectedAnswers([]);
                         }}
-                        className="input-modern w-full min-h-[120px]"
+                        className="input-modern w-full"
+                        size={4}
                       >
-                        <option value="">-- Select Questions --</option>
                         {questions.map((question) => (
                           <option key={question.id} value={question.id.toString()}>
-                            {getQuestionDisplayText(question)}
+                            Q{question.id}: {question.description.substring(0, 40)}...
                           </option>
                         ))}
                       </select>
-                      <p className="text-xs text-gray-500 mt-1">
-                        Hold Ctrl/Cmd to select multiple questions. Leave empty to withdraw from all questions.
-                      </p>
+                      <p className="text-xs text-gray-500 mt-1">Hold Ctrl/Cmd for multiple</p>
                     </div>
-                    
-                    {/* Answer Selection */}
+
                     <div>
                       <label className="block text-sm font-medium mb-2 theme-text-primary">
-                        Select Answers (optional)
+                        Answers
                       </label>
                       <select
                         multiple
@@ -362,156 +431,197 @@ export default function DashboardPage() {
                           const selected = Array.from(e.target.selectedOptions, option => option.value);
                           setSelectedAnswers(selected);
                         }}
-                        className="input-modern w-full min-h-[120px]"
-                        disabled={selectedQuestions.length === 0}
+                        className="input-modern w-full"
+                        size={4}
                       >
-                        <option value="">-- Select Answers --</option>
-                        {selectedQuestions.length > 0 ? (
-                          selectedQuestions.map(qId => {
-                            const questionId = parseInt(qId);
-                            const answers = questionAnswers.get(questionId) || [];
-                            return answers.map((_, index) => (
-                              <option key={`${qId}-${index}`} value={index.toString()}>
-                                {getAnswerDisplayText(questionId, index)}
-                              </option>
-                            ));
-                          }).flat()
-                        ) : (
-                          <option value="" disabled>Please select questions first</option>
-                        )}
+                        {questions.map((question) => {
+                          const answers = questionAnswers.get(question.id) || [];
+                          return answers.map((_, index) => (
+                            <option key={`${question.id}-${index}`} value={index.toString()}>
+                              Q{question.id} A{index}
+                            </option>
+                          ));
+                        })}
                       </select>
-                      <p className="text-xs text-gray-500 mt-1">
-                        {selectedQuestions.length === 0 
-                          ? "Select questions first to see available answers."
-                          : "Hold Ctrl/Cmd to select multiple answers. Leave empty to withdraw from all answers in selected questions."
-                        }
-                      </p>
+                      <p className="text-xs text-gray-500 mt-1">Hold Ctrl/Cmd for multiple</p>
                     </div>
-                    
-                    {/* Recipient */}
+
                     <div>
                       <label className="block text-sm font-medium mb-2 theme-text-primary">
-                        Recipient Address (optional)
+                        Recipient Address
                       </label>
                       <input
                         type="text"
                         value={recipient}
                         onChange={(e) => setRecipient(e.target.value)}
-                        placeholder="0x... (leave empty to use your address)"
+                        placeholder="Your wallet address (optional)"
                         className="input-modern w-full"
                       />
-                      <p className="text-xs text-gray-500 mt-1">Leave empty to withdraw to your own address</p>
                     </div>
-                    
-                    <div className="flex gap-3">
+
+                    <div className="flex space-x-3 pt-2">
                       <button
                         type="submit"
-                        className="button-primary"
+                        className="flex-1 px-6 py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg font-semibold hover:from-blue-600 to-blue-700 transition-all duration-200 disabled:opacity-50"
                         disabled={isPending || isConfirming}
                       >
-                        {isPending || isConfirming ? "Processing..." : "Confirm Withdrawal"}
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setShowWithdrawForm(false)}
-                        className="button-secondary"
-                      >
-                        Cancel
+                        {isPending || isConfirming ? "Processing..." : "Withdraw Funds"}
                       </button>
                     </div>
                   </form>
-                )}
 
-                {error && (
-                  <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg">
-                    <p className="text-red-600 text-sm">{error}</p>
-                  </div>
-                )}
-              </div>
+                  {error && (
+                    <div className="mt-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700 rounded-lg">
+                      <p className="text-red-600 dark:text-red-400 text-sm">{error}</p>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           )}
 
           {/* Claim Tab */}
           {activeTab === 'claim' && (
-            <div className="space-y-6">
-              <div>
-                <h3 className="text-xl font-semibold mb-4 theme-text-primary">Claim Rewards</h3>
-                <p className="theme-text-secondary mb-4">
-                  Claim your bounty rewards and platform fees.
+            <div className="max-w-4xl mx-auto">
+              <div className="text-center mb-8">
+                <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-green-100 to-green-200 dark:from-green-900/30 dark:to-green-800/30 rounded-full mb-6">
+                  <svg className="w-10 h-10 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+                <h3 className="text-2xl font-bold mb-3 theme-text-primary">Claim Your Rewards</h3>
+                <p className="theme-text-secondary text-lg max-w-2xl mx-auto">
+                  Claim bounty rewards and platform fees from finalized questions.
                 </p>
+              </div>
+
+              {/* Bounty Claims */}
+              <div className="mb-8">
+                <div className="flex items-center justify-between mb-6">
+                  <h4 className="text-xl font-semibold theme-text-primary">Bounty Rewards</h4>
+                  <div className="text-sm text-gray-500">
+                    {questions.filter(q => q.slotData.finalized).length} finalized questions
+                  </div>
+                </div>
                 
-                {/* Bounty Claims */}
-                <div className="mb-6">
-                  <h4 className="text-lg font-medium mb-3 theme-text-primary">Claim Bounty Rewards</h4>
-                  <p className="text-sm theme-text-secondary mb-4">
-                    Claim rewards for questions where you provided answers or vouched for answers.
-                  </p>
-                  
-                  {questions.length > 0 ? (
-                    <div className="space-y-3">
-                      {questions.map((question) => (
-                        <div key={question.id} className="p-4 border border-gray-200 dark:border-gray-700 rounded-lg">
-                          <div className="flex items-center justify-between">
-                            <div className="flex-1">
-                              <h5 className="font-medium theme-text-primary">
-                                Q{question.id}: {question.description.substring(0, 60)}...
-                              </h5>
-                              <p className="text-sm theme-text-secondary">
-                                Bounty: {question.bountyAmount.toString()} tokens
-                              </p>
-                            </div>
-                            <div className="flex space-x-2">
-                              <button
-                                onClick={() => handleClaimBounty(question.id, true)}
-                                className="px-3 py-1 text-sm bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
-                                disabled={isPending || isConfirming}
-                              >
-                                Claim as Hunter
-                              </button>
-                              <button
-                                onClick={() => handleClaimBounty(question.id, false)}
-                                className="px-3 py-1 text-sm bg-green-500 text-white rounded hover:bg-green-600 transition-colors"
-                                disabled={isPending || isConfirming}
-                              >
-                                Claim as Voucher
-                              </button>
+                {questions.length > 0 ? (
+                  <div className="grid gap-4">
+                    {questions
+                      .filter(question => {
+                        if (!question.slotData.finalized) return false;
+                        const finalAnswerId = question.slotData.answerId;
+                        if (finalAnswerId === 0) return false;
+                        
+                        const userDataForQuestion = userData.get(question.id);
+                        if (!userDataForQuestion) return false;
+                        
+                        const [, hunterClaimable, vouched, claimed] = userDataForQuestion;
+                        return hunterClaimable > BigInt(0) || 
+                               (!question.slotData.challengeSucceeded && vouched > BigInt(0) && !claimed);
+                      })
+                      .map((question) => {
+                        const userDataForQuestion = userData.get(question.id);
+                        const [, hunterClaimable, vouched, claimed] = userDataForQuestion || [BigInt(0), BigInt(0), BigInt(0), false];
+                        
+                        return (
+                          <div key={question.id} className="bg-white dark:bg-gray-800 rounded-xl p-5 border border-gray-200 dark:border-gray-700 shadow-sm hover:shadow-md transition-shadow">
+                            <div className="flex items-start justify-between">
+                              <div className="flex-1">
+                                <div className="flex items-center space-x-3 mb-3">
+                                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300">
+                                    Finalized
+                                  </span>
+                                  <span className="text-sm text-gray-500">Q{question.id}</span>
+                                </div>
+                                <h5 className="font-medium theme-text-primary mb-2 line-clamp-2">
+                                  {question.description}
+                                </h5>
+                                <div className="flex items-center space-x-4 text-sm">
+                                  <span className="text-gray-600 dark:text-gray-400">
+                                    Bounty: <span className="font-medium">{formatBountyAmount(question.bountyAmount)}</span>
+                                  </span>
+                                  {hunterClaimable > BigInt(0) && (
+                                    <span className="text-blue-600 dark:text-blue-400">
+                                      Hunter: <span className="font-medium">{formatBountyAmount(hunterClaimable)}</span>
+                                    </span>
+                                  )}
+                                  {vouched > BigInt(0) && !question.slotData.challengeSucceeded && !claimed && (
+                                    <span className="text-green-600 dark:text-green-400">
+                                      Vouched: <span className="font-medium">{formatBountyAmount(vouched)}</span>
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+                              <div className="flex flex-col space-y-2 ml-4">
+                                {hunterClaimable > BigInt(0) && (
+                                  <button
+                                    onClick={() => handleClaimBounty(question.id, true)}
+                                    className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors text-sm font-medium disabled:opacity-50"
+                                    disabled={isPending || isConfirming}
+                                  >
+                                    Claim as Hunter
+                                  </button>
+                                )}
+                                {vouched > BigInt(0) && !question.slotData.challengeSucceeded && !claimed && (
+                                  <button
+                                    onClick={() => handleClaimBounty(question.id, false)}
+                                    className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors text-sm font-medium disabled:opacity-50"
+                                    disabled={isPending || isConfirming}
+                                  >
+                                    Claim as Voucher
+                                  </button>
+                                )}
+                              </div>
                             </div>
                           </div>
-                        </div>
-                      ))}
+                        );
+                      })}
+                  </div>
+                ) : (
+                  <div className="text-center py-12">
+                    <div className="w-16 h-16 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
+                      </svg>
                     </div>
-                  ) : (
-                    <p className="text-sm theme-text-secondary">No questions available for claiming.</p>
-                  )}
-                </div>
-
-                {/* Platform Fee Claims */}
-                {isOwner && (
-                  <div className="mb-6">
-                    <h4 className="text-lg font-medium mb-3 theme-text-primary">Claim Platform Fees</h4>
-                    <p className="text-sm theme-text-secondary mb-4">
-                      As the contract owner, you can claim accumulated platform fees.
-                    </p>
-                    
-                    <div className="flex items-center space-x-3">
-                      <input
-                        type="text"
-                        value={recipient}
-                        onChange={(e) => setRecipient(e.target.value)}
-                        placeholder="Recipient address for platform fees"
-                        className="input-modern flex-1"
-                      />
-                      <button
-                        onClick={handleClaimPlatformFee}
-                        className="px-4 py-2 bg-purple-500 text-white rounded hover:bg-purple-600 transition-colors"
-                        disabled={isPending || isConfirming || !recipient}
-                      >
-                        {isPending || isConfirming ? "Processing..." : "Claim Platform Fees"}
-                      </button>
-                    </div>
+                    <p className="text-gray-500 dark:text-gray-400">No questions available for claiming</p>
                   </div>
                 )}
               </div>
+
+              {/* Platform Fee Claims */}
+              {isOwner && (
+                <div className="bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-200 dark:border-gray-700 shadow-sm">
+                  <div className="flex items-center space-x-3 mb-4">
+                    <div className="w-10 h-10 bg-purple-100 dark:bg-purple-900/30 rounded-full flex items-center justify-center">
+                      <svg className="w-5 h-5 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 2v20m5-18H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+                      </svg>
+                    </div>
+                    <div>
+                      <h4 className="text-lg font-semibold theme-text-primary">Platform Fees</h4>
+                      <p className="text-sm theme-text-secondary">As the contract owner, claim accumulated platform fees</p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center space-x-3">
+                    <input
+                      type="text"
+                      value={recipient}
+                      onChange={(e) => setRecipient(e.target.value)}
+                      placeholder="Recipient address for platform fees"
+                      className="input-modern flex-1"
+                    />
+                    <button
+                      onClick={handleClaimPlatformFee}
+                      className="px-6 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition-colors font-medium disabled:opacity-50"
+                      disabled={isPending || isConfirming || !recipient}
+                    >
+                      {isPending || isConfirming ? "Processing..." : "Claim Platform Fees"}
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>
